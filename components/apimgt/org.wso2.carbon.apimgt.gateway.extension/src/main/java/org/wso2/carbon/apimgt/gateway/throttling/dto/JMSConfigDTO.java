@@ -22,7 +22,7 @@ import javax.jms.ExceptionListener;
 import javax.jms.MessageListener;
 
 /**
- * this is a temproary class to hold JMS throttling topic configs
+ * this is a temporary class to hold JMS throttling topic configs
  */
 public class JMSConfigDTO {
 

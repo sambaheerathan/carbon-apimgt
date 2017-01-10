@@ -35,7 +35,7 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 /**
- * JMS receiver thread, try to fetch message from JMS topic periodic
+ * JMS receiver thread, fetch messages from JMS topic
  */
 public class JmsThrottleReceiver {
     private static final Logger log = LoggerFactory.getLogger(JmsReceiver.class);
