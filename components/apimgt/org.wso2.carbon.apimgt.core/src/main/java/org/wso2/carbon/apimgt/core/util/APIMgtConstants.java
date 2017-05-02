@@ -25,8 +25,9 @@ package org.wso2.carbon.apimgt.core.util;
  */
 public class APIMgtConstants {
 
-    public static final String DEPRECATE_PREVIOUS_VERSIONS = "Deprecate older versions";
-    public static final String REQUIRE_RE_SUBSCRIPTIONS = "Require Re-Subscriptions";
+    public static final String DEPRECATE_PREVIOUS_VERSIONS = "Deprecate old versions after publish the API";
+    public static final String REQUIRE_RE_SUBSCRIPTIONS = "Require re-subscription when publish the API";
+    public static final String CHECK_LIST_ITEM_CHANGE_EVENT = "CheckListItemChange";
 
     //Swagger v2.0 constants
     public static final String SWAGGER_X_SCOPE = "x-scope";
@@ -57,11 +58,18 @@ public class APIMgtConstants {
     public static final String AUTH_APPLICATION_USER_LEVEL_TOKEN = "Application_User";
     public static final String AUTH_APPLICATION_OR_USER_LEVEL_TOKEN = "Any";
     public static final String DEFAULT_API_POLICY = "Unlimited";
+    
+    //workflow executor default executor
+    public static final String WF_DEFAULT_WF_EXEC = 
+            "org.wso2.carbon.apimgt.core.workflow.DefaultWorkflowExecutor";
 
     //Store constants
     public static final String DEFAULT_APPLICATION_NAME = "DefaultApplication";
     public static final String EMPTY_STRING_VALUE = " ";
+    public static final String SUPPORTED_HTTP_VERBS = "GET,POST,PUT,DELETE,PATCH,HEAD,OPTIONS";
 
+    public static final String HTTP_GET = "GET";
+    public static final String OVERWRITE_LABELS = "overwrite_labels";
     /**
      * Application statuses.
      */
@@ -88,6 +96,7 @@ public class APIMgtConstants {
     public enum SubscriptionStatus {
         BLOCKED,
         PROD_ONLY_BLOCKED,
+        SANDBOX_ONLY_BLOCKED,
         ACTIVE,
         ON_HOLD,
         REJECTED
@@ -101,6 +110,15 @@ public class APIMgtConstants {
         UN_SUBSCRIBE
     }
 
+
+    /**
+     * API workflow statuses.
+     */
+    public enum APILCWorkflowStatus {
+        APPROVED,
+        REJECTED,
+        PENDING
+    }
     /**
      * Throttle policy related constants
      */
@@ -193,8 +211,6 @@ public class APIMgtConstants {
         public static final String API_LEVEL = "api";
         public static final String APPLICATION_LEVEL = "application";
         public static final String SUBSCRIPTION_LEVEL = "subscription";
-        public static final String RESOURCE_LEVEL = "resource";
-
     }
 
     /**
@@ -214,5 +230,92 @@ public class APIMgtConstants {
         public static final String SUBSCRIPTION_ID = "SUBSCRIPTION_ID";
         public static final String DOC_ID = "DOC_ID";
         public static final String TIER_LEVEL = "TIER_LEVEL";
+        public static final String ENDPOINT_ID = "ENDPOINT_ID";
+        public static final String LIFECYCLE_ID = "LIFECYCLE_ID";
+        public static final String WORKFLOW_REF_ID = "WORKFLOW_REFERENCE_ID";
+        public static final String COMMENT_ID = "COMMENT_ID";
     }
+
+    /**
+     * Permission related constants
+     */
+    public static class Permission {
+        public static final int SUBSCRIBE_PERMISSION = 8;
+        public static final int READ_PERMISSION = 4;
+        public static final int UPDATE_PERMISSION = 2;
+        public static final int DELETE_PERMISSION = 1;
+        public static final String EVERYONE_GROUP = "EVERYONE";
+        public static final String GROUP_ID = "groupId";
+        public static final String PERMISSION = "permission";
+        public static final String READ = "READ";
+        public static final String UPDATE = "UPDATE";
+        public static final String DELETE = "DELETE";
+        public static final String SUBSCRIPTION = "SUBSCRIPTION";
+
+    }
+
+    /**
+     * Functions related constants
+     */
+    public static class FunctionsConstants {
+        public static final String API_ID = "apiId";
+        public static final String API_NAME = "apiName";
+        public static final String API_VERSION = "apiVersion";
+        public static final String API_DESCRIPTION = "apiDescription";
+        public static final String API_CONTEXT = "apiContext";
+        public static final String API_LC_STATUS = "apiStatus";
+        public static final String API_PERMISSION = "apiPermission";
+        public static final String API_PROVIDER = "apiProvider";
+        public static final String EVENT = "event";
+        public static final String COMPONENT = "component";
+        public static final String EVENT_TIME = "eventTime";
+        public static final String GET = "GET";
+        public static final String POST = "POST";
+        public static final String PUT = "PUT";
+        public static final String DELETE = "DELETE";
+        public static final String CONTENT_TYPE = "Content-Type";
+        public static final String ACCEPT = "Accept";
+        public static final String USERNAME = "username";
+        public static final String PASSWORD = "password";
+        public static final String USER_TENANT_DOMAIN = "userTenantDomain";
+        public static final String RSA_SIGNED_TOKEN = "rsaSignedToken";
+        public static final String SET_COOKIE = "Set-Cookie";
+        public static final String COOKIE = "Cookie";
+    }
+    
+    /**
+     * Workflow related constants
+     */
+    public static class WorkflowConstants {
+        public static final String WF_TYPE_AM_SUBSCRIPTION_CREATION = "AM_SUBSCRIPTION_CREATION";
+        public static final String WF_TYPE_AM_SUBSCRIPTION_DELETION = "AM_SUBSCRIPTION_DELETION";
+        public static final String WF_TYPE_AM_APPLICATION_CREATION = "AM_APPLICATION_CREATION";
+        public static final String WF_TYPE_AM_APPLICATION_DELETION = "AM_APPLICATION_DELETION";
+        public static final String WF_TYPE_AM_APPLICATION_UPDATE = "AM_APPLICATION_UPDATE";
+        public static final String WF_TYPE_AM_API_STATE = "AM_API_STATE";
+        public static final String WF_TYPE_AM_APPLICATION_REGISTRATION_PRODUCTION = 
+                "AM_APPLICATION_REGISTRATION_PRODUCTION";
+        public static final String WF_TYPE_AM_APPLICATION_REGISTRATION_SANDBOX = "AM_APPLICATION_REGISTRATION_SANDBOX";
+        public static final String ATTRIBUTE_API_CUR_STATE = "apiCurrentState";
+        public static final String ATTRIBUTE_API_TARGET_STATE = "apiTargetState";
+        public static final String ATTRIBUTE_API_LC_INVOKER = "lcStateChangeInvoker";
+        public static final String ATTRIBUTE_API_LAST_UPTIME = "lastUpdatedTime";
+        public static final String ATTRIBUTE_APPLICATION_NAME = "name";
+        public static final String ATTRIBUTE_APPLICATION_UPDATEDBY = "updatedUser";
+        public static final String ATTRIBUTE_APPLICATION_TIER = "tier";
+        public static final String ATTRIBUTE_APPLICATION_DESCRIPTION = "description";  
+        public static final String ATTRIBUTE_APPLICATION_CALLBACKURL = "callbackUrl";
+        public static final String ATTRIBUTE_APPLICATION_GROUPID = "groupId"; 
+        public static final String ATTRIBUTE_APPLICATION_PERMISSION = "permission";
+        public static final String ATTRIBUTE_APPLICATION_EXISTIN_APP_STATUS = "status";
+
+    }
+
+    /**
+     * ETags related constants
+     */
+    public static class ETagConstants {
+        public static final String MESSAGE_DIGEST_ALGORITHM_MD5 = "MD5";
+    }
+    
 }

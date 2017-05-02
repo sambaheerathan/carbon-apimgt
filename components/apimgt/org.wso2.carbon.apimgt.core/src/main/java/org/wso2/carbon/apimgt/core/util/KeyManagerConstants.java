@@ -23,7 +23,7 @@ package org.wso2.carbon.apimgt.core.util;
  */
 public class KeyManagerConstants {
 
-    public static final String OAUTH_CLIENT_ID = "client_id"; //this means consumer key
+    public static final String OAUTH_CLIENT_ID = "client_id"; //  this means consumer key
     public static final String OAUTH_CLIENT_SECRET = "client_secret";
     public static final String OAUTH_REDIRECT_URIS = "redirect_uris";
     public static final String OAUTH_CLIENT_OWNER = "ext_param_owner";

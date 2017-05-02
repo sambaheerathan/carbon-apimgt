@@ -31,10 +31,10 @@ import java.util.List;
 public class APIMappingUtil {
 
     /**
-     * Converts {@link List<API>} to {@link APIListDTO} DTO.
-     * 
-     * @param apisResult
-     * @return
+     * Converts {@code List<API>} to {@link APIListDTO} DTO.
+     *
+     * @param apisResult List of APIs
+     * @return APIListDTO
      */
     public static APIListDTO toAPIListDTO(List<API> apisResult) {
         APIListDTO apiListDTO = new APIListDTO();
@@ -47,9 +47,9 @@ public class APIMappingUtil {
 
     /**
      * Converts {@link API} List to an {@link APIInfoDTO} List.
-     * 
-     * @param apiSummaryList
-     * @return
+     *
+     * @param apiSummaryList List of APIs
+     * @return List of APIInfoDTO
      */
     private static List<APIInfoDTO> toAPIInfo(List<API> apiSummaryList) {
         List<APIInfoDTO> apiInfoList = new ArrayList<APIInfoDTO>();
@@ -60,7 +60,7 @@ public class APIMappingUtil {
             apiInfo.setDescription(apiSummary.getDescription());
             apiInfo.setName(apiSummary.getName());
             apiInfo.setProvider(apiSummary.getProvider());
-            apiInfo.setStatus(apiSummary.getLifeCycleStatus());
+            apiInfo.setLifeCycleStatus(apiSummary.getLifeCycleStatus());
             apiInfo.setVersion(apiSummary.getVersion());
             apiInfoList.add(apiInfo);
         }
@@ -69,8 +69,8 @@ public class APIMappingUtil {
 
     /**
      * Converts {@link APIDTO} to a {@link API}.
-     * 
-     * @param api
+     *
+     * @param api API
      * @return API DTO
      */
     public static APIDTO toAPIDTO(API api) {
@@ -78,11 +78,12 @@ public class APIMappingUtil {
         apiDTO.setId(api.getId());
         apiDTO.setName(api.getName());
         apiDTO.setProvider(api.getProvider());
-        apiDTO.setStatus(api.getLifeCycleStatus());
+        apiDTO.setLifeCycleStatus(api.getLifeCycleStatus());
         apiDTO.setVersion(api.getVersion());
         apiDTO.setContext(api.getContext());
         apiDTO.setDescription(api.getDescription());
-
+        apiDTO.setPolicies(api.getPolicies());
+        apiDTO.setLabels(api.getLabels());
         return apiDTO;
     }
 

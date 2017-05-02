@@ -22,6 +22,7 @@ package org.wso2.carbon.apimgt.core.dao.impl;
 
 import org.wso2.carbon.apimgt.core.dao.ApplicationDAO;
 import org.wso2.carbon.apimgt.core.exception.APIMgtDAOException;
+import org.wso2.carbon.apimgt.core.models.APIKey;
 import org.wso2.carbon.apimgt.core.models.Application;
 import org.wso2.carbon.apimgt.core.models.OAuthApplicationInfo;
 import org.wso2.carbon.apimgt.core.util.APIMgtConstants;
@@ -32,9 +33,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 /**
  * Default implementation of the ApplicationDAO interface. Uses SQL syntax that is common to H2 and MySQL DBs.
  * Hence is considered as the default due to its re-usability.
@@ -44,6 +47,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
     private static final String GET_APPS_QUERY = "SELECT NAME, APPLICATION_POLICY_ID, CALLBACK_URL, DESCRIPTION, " +
             "APPLICATION_STATUS, GROUP_ID, CREATED_BY, CREATED_TIME, UPDATED_BY, LAST_UPDATED_TIME, UUID " +
             "FROM AM_APPLICATION";
+    private static final String AM_APPLICATION_TABLE_NAME = "AM_APPLICATION";
 
     ApplicationDAOImpl() {
     }
@@ -53,7 +57,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      *
      * @param appId The UUID that uniquely identifies an Application
      * @return valid {@link Application} object or null
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to retrieve application.
      */
     @Override
     public Application getApplication(String appId) throws APIMgtDAOException {
@@ -64,6 +68,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
             ps.setString(1, appId);
             try (ResultSet rs = ps.executeQuery()) {
                 application = this.createApplicationFromResultSet(rs);
+                setApplicationKeys(conn, application, appId);
             }
         } catch (SQLException ex) {
             throw new APIMgtDAOException(ex);
@@ -77,7 +82,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * @param appName Name of the Application
      * @param ownerId ID of the application owner.
      * @return valid {@link Application} object or null
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to retrieve application.
      */
     @Override
     public Application getApplicationByName(String appName, String ownerId) throws APIMgtDAOException {
@@ -101,7 +106,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      *
      * @param ownerId Username of user
      * @return A list of {@link Application}
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to retrieve applications.
      */
     @Override
     public List<Application> getApplications(String ownerId) throws APIMgtDAOException {
@@ -124,8 +129,8 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * @param offset   The number of results from the beginning that is to be ignored
      * @param limit    The maximum number of results to be returned after the offset
      * @param userName The username to filter results by
-     * @return {@link ApplicationSummaryResults} matching results
-     * @throws APIMgtDAOException
+     * @return {@code Application[]} matching results
+     * @throws APIMgtDAOException   If failed to retrieve applications.
      */
     @Override
     public Application[] getApplicationsForUser(int offset, int limit, String userName) throws APIMgtDAOException {
@@ -139,8 +144,8 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * @param offset  The number of results from the beginning that is to be ignored
      * @param limit   The maximum number of results to be returned after the offset
      * @param groupID The Group ID to filter results by
-     * @return {@link ApplicationSummaryResults} matching results
-     * @throws APIMgtDAOException
+     * @return {@code Application[]} matching results
+     * @throws APIMgtDAOException   If failed to retrieve applications.
      */
     @Override
     public Application[] getApplicationsForGroup(int offset, int limit, String groupID) throws APIMgtDAOException {
@@ -153,7 +158,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      *
      * @param searchString The search string provided
      * @return An array of matching {@link Application} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to retrieve applications.
      */
     @Override
     public Application[] searchApplicationsForUser(String searchString, String userId)
@@ -169,7 +174,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * @param searchString The search string provided
      * @param groupID      The Group ID to filter results by
      * @return An array of matching {@link Application} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to retrieve applications.
      */
     @Override
     public Application[] searchApplicationsForGroup(String searchString, String groupID) throws APIMgtDAOException {
@@ -181,7 +186,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * Add a new instance of an Application
      *
      * @param application The {@link Application} object to be added
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to add application.
      */
     @Override
     public void addApplication(Application application) throws APIMgtDAOException {
@@ -210,6 +215,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                 ps.setString(10, application.getCreatedUser());
                 ps.setTimestamp(11, Timestamp.valueOf(application.getCreatedTime()));
                 ps.executeUpdate();
+                addApplicationPermission(conn, application.getPermissionMap(), application.getId());
                 conn.commit();
             } catch (SQLException ex) {
                 conn.rollback();
@@ -223,11 +229,77 @@ public class ApplicationDAOImpl implements ApplicationDAO {
     }
 
     /**
+     * This method will save permission in to AM_APPS_GROUP_PERMISSION table.
+     *
+     * @param connection Database connection
+     * @param permissionMap Permission Data
+     * @param applicationId Application Id
+     * @throws SQLException If failed to add application.
+     */
+    private void addApplicationPermission(Connection connection, HashMap permissionMap, String applicationId)
+            throws SQLException {
+        final String query = "INSERT INTO AM_APPS_GROUP_PERMISSION (APPLICATION_ID, GROUP_ID, PERMISSION) " +
+                "VALUES (?, ?, ?)";
+        Map<String, Integer> map = permissionMap;
+        if (permissionMap != null) {
+            if (permissionMap.size() > 0) {
+                try (PreparedStatement statement = connection.prepareStatement(query)) {
+                    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                        statement.setString(1, applicationId);
+                        statement.setString(2, entry.getKey());
+                        //if permission value is UPDATE or DELETE we by default give them read permission also.
+                        if (entry.getValue() < APIMgtConstants.Permission.READ_PERMISSION && entry.getValue() != 0) {
+                            statement.setInt(3, entry.getValue() + APIMgtConstants.Permission.READ_PERMISSION);
+                        } else {
+                            statement.setInt(3, entry.getValue());
+                        }
+                        statement.addBatch();
+                    }
+                    statement.executeBatch();
+                }
+            }
+        } else {
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setString(1, applicationId);
+                statement.setString(2, APIMgtConstants.Permission.EVERYONE_GROUP);
+                statement.setInt(3, 7);
+                statement.execute();
+            }
+        }
+
+    }
+
+    private void updateApplicationPermission(Connection connection, HashMap permissionMap, String applicationId)
+            throws SQLException {
+        final String query = "INSERT INTO AM_APPS_GROUP_PERMISSION (APPLICATION_ID, GROUP_ID, PERMISSION) " +
+                "VALUES (?, ?, ?)";
+        Map<String, Integer> map = permissionMap;
+        if (permissionMap != null) {
+            if (permissionMap.size() > 0) {
+                try (PreparedStatement statement = connection.prepareStatement(query)) {
+                    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                        statement.setString(1, applicationId);
+                        statement.setString(2, entry.getKey());
+                        //if permission value is UPDATE or DELETE we by default give them read permission also.
+                        if (entry.getValue() < APIMgtConstants.Permission.READ_PERMISSION && entry.getValue() != 0) {
+                            statement.setInt(3, entry.getValue() + APIMgtConstants.Permission.READ_PERMISSION);
+                        } else {
+                            statement.setInt(3, entry.getValue());
+                        }
+                        statement.addBatch();
+                    }
+                    statement.executeBatch();
+                }
+            }
+        }
+    }
+
+    /**
      * Update an existing Application
      *
      * @param appID      The UUID of the Application that needs to be updated
      * @param updatedApp Substitute {@link Application} object that will replace the existing Application
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to update applications.
      */
     @Override
     public void updateApplication(String appID, Application updatedApp)
@@ -235,7 +307,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
         final String updateAppQuery = "UPDATE AM_APPLICATION SET NAME=?, APPLICATION_POLICY_ID=" +
                 "(SELECT UUID FROM AM_APPLICATION_POLICY WHERE NAME=?), " +
                 "CALLBACK_URL=?, DESCRIPTION=?, APPLICATION_STATUS=?, GROUP_ID=?, UPDATED_BY=?, " +
-                "LAST_UPDATED_TIME=?";
+                "LAST_UPDATED_TIME=? WHERE UUID=?";
         try (Connection conn = DAOUtil.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(updateAppQuery)) {
@@ -247,7 +319,9 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                 ps.setString(6, updatedApp.getGroupId());
                 ps.setString(7, updatedApp.getUpdatedUser());
                 ps.setTimestamp(8, Timestamp.valueOf(updatedApp.getUpdatedTime()));
+                ps.setString(9, appID);
                 ps.executeUpdate();
+                updateApplicationPermission(conn, updatedApp.getPermissionMap(), updatedApp.getId());
                 conn.commit();
             } catch (SQLException ex) {
                 conn.rollback();
@@ -264,7 +338,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
      * Remove an existing Application
      *
      * @param appID The UUID of the Application that needs to be deleted
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to delete application.
      */
     @Override
     public void deleteApplication(String appID) throws APIMgtDAOException {
@@ -315,7 +389,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
     @Override
     public void addApplicationKeys(String appId, OAuthApplicationInfo oAuthAppDetails)
             throws APIMgtDAOException {
-        final String addApplicationKeysQuery = "INSERT INTO AM_APP_KEY_MAPPING (APPLICATION_ID, CONSUMER_KEY, KEY_TYPE,"
+        final String addApplicationKeysQuery = "INSERT INTO AM_APP_KEY_MAPPING (APPLICATION_ID, CLIENT_ID, KEY_TYPE,"
                 + "STATE, CREATE_MODE) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DAOUtil.getConnection()) {
             conn.setAutoCommit(false);
@@ -332,6 +406,34 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                 throw new APIMgtDAOException(ex);
             } finally {
                 conn.setAutoCommit(DAOUtil.isAutoCommit());
+            }
+        } catch (SQLException ex) {
+            throw new APIMgtDAOException(ex);
+        }
+    }
+
+    /**
+     * @see ApplicationDAO#getLastUpdatedTimeOfApplication(String)
+     */
+    @Override
+    public String getLastUpdatedTimeOfApplication(String applicationId) throws APIMgtDAOException {
+        return EntityDAO.getLastUpdatedTimeOfResourceByUUID(AM_APPLICATION_TABLE_NAME, applicationId);
+    }
+
+    private void setApplicationKeys(Connection conn, Application application, String applicationId)
+            throws APIMgtDAOException {
+        final String getApplicationKeysQuery =
+                "SELECT CLIENT_ID, KEY_TYPE, STATE FROM AM_APP_KEY_MAPPING WHERE " + "APPLICATION_ID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(getApplicationKeysQuery)) {
+            ps.setString(1, applicationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    APIKey apiKey = new APIKey();
+                    apiKey.setConsumerKey(rs.getString("CLIENT_ID"));
+                    apiKey.setType(rs.getString("KEY_TYPE"));
+                    apiKey.setState(rs.getString("STATE"));
+                    application.addKey(apiKey);
+                }
             }
         } catch (SQLException ex) {
             throw new APIMgtDAOException(ex);
@@ -364,5 +466,29 @@ public class ApplicationDAOImpl implements ApplicationDAO {
                     rs.getString("APPLICATION_POLICY_ID")).getPolicyName());
         }
         return application;
+    }
+
+    @Override
+    public void updateApplicationState(String appID, String state) throws APIMgtDAOException {
+        final String updateAppQuery = "UPDATE AM_APPLICATION SET APPLICATION_STATUS=?, LAST_UPDATED_TIME=?  "
+                + "WHERE UUID = ?";
+        try (Connection conn = DAOUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(updateAppQuery)) {
+                ps.setString(1, state);
+                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setString(3, appID);               
+                ps.executeUpdate();
+                conn.commit();
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw new APIMgtDAOException(ex);
+            } finally {
+                conn.setAutoCommit(DAOUtil.isAutoCommit());
+            }
+        } catch (SQLException ex) {
+            throw new APIMgtDAOException(ex);
+        }
+        
     }
 }

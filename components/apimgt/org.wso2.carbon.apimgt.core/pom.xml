@@ -19,13 +19,13 @@
   ~ *
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <parent>
         <artifactId>apimgt</artifactId>
         <groupId>org.wso2.carbon.apimgt</groupId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.0.4-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -64,7 +64,6 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -81,12 +80,16 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.9.10</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.h2database.wso2</groupId>
-            <artifactId>h2-database-engine</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.lucene</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -104,8 +107,8 @@
             <artifactId>annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.apimgt</groupId>
-            <artifactId>org.wso2.carbon.apimgt.lifecycle.manager.core</artifactId>
+            <groupId>org.wso2.carbon.lcm</groupId>
+            <artifactId>org.wso2.carbon.lcm.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jacoco</groupId>
@@ -149,6 +152,10 @@
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
+                <exclusion>
+                	<groupId>org.slf4j</groupId>
+                	<artifactId>slf4j-api</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -176,71 +183,98 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.35</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>
-            <version>3.5.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
-            <version>4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
-            <version>12.1.0.1-atlassian-hosted</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds.wso2</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>2.26.1.wso2v2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ballerinalang</groupId>
+            <artifactId>ballerina-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                	<groupId>org.slf4j</groupId>
+                	<artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.messaging</groupId>
+            <artifactId>org.wso2.carbon.messaging</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                	<groupId>org.slf4j</groupId>
+                	<artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                	<groupId>org.slf4j</groupId>
+                	<artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.ballerinalang</groupId>
+            <artifactId>workspace-service</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.core</artifactId>
+            <version>${carbon.kernel.version}</version>
         </dependency>
     </dependencies>
     <build>
         <plugins>
-            <plugin><!-- Overridden from parent pom to exclude generated sources -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            <configLocation>
-                                https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/checkstyle.xml
-                            </configLocation>
-                            <suppressionsLocation>
-                                https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/suppressions.xml
-                            </suppressionsLocation>
-                            <encoding>UTF-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <failsOnError>true</failsOnError>
-                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                            <!--Exclude generated sources-->
-                            <excludes>**/gen/**/*</excludes>
-                            <!--skip for generated resources-->
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.wso2.carbon</groupId>
-                <artifactId>org.wso2.carbon.plugins.configuration</artifactId>
+                <groupId>org.wso2.carbon.config</groupId>
+                <artifactId>org.wso2.carbon.config.maven.plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>
@@ -249,6 +283,19 @@
                         <phase>compile</phase>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>                
+                <configuration>
+                    <systemProperties>                        
+                        <property>
+                            <name>carbon.home</name>
+                            <value>${basedir}/src/test/resources/</value>
+                        </property>
+                    </systemProperties>
+                    <skip>${skip.surefire.test}</skip>
+                </configuration>
             </plugin>
         </plugins>
         <resources>
@@ -322,7 +369,6 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.18.1</version>
                         <executions>
                             <execution>
                                 <id>start-docker-for-mysql</id>
@@ -351,6 +397,9 @@
                                             <MYSQL_DATABASE>testamdb</MYSQL_DATABASE>
                                             <MYSQL_ROOT_PASSWORD>root</MYSQL_ROOT_PASSWORD>
                                         </env>
+                                        <ports>
+                                            <port>${apim-mysql.port}:3306</port>
+                                        </ports>
                                         <wait>
                                             <tcp>
                                                 <ports>
@@ -387,7 +436,11 @@
                         <configuration>
                             <environmentVariables>
                                 <DATABASE_TYPE>mysql</DATABASE_TYPE>
+                                <PORT>${apim-mysql.port}</PORT>
                             </environmentVariables>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -400,7 +453,6 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.18.1</version>
                         <executions>
                             <execution>
                                 <id>start-docker-for-db2</id>
@@ -437,7 +489,7 @@
                                             </tcp>
                                             <time>60000</time>
                                         </wait>
-                                        <cmd></cmd>
+                                        <cmd />
                                     </run>
                                 </image>
                             </images>
@@ -467,6 +519,9 @@
                             <environmentVariables>
                                 <DATABASE_TYPE>db2</DATABASE_TYPE>
                             </environmentVariables>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -479,7 +534,6 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.18.1</version>
                         <executions>
                             <execution>
                                 <id>start-docker-for-mssql</id>
@@ -500,41 +554,22 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>dockerhub.private.wso2.com/tharindua-wso2-mssql-server-linux</name>
+                                    <name>tharindu1st/mssql-server-linux</name>
                                     <alias>apim-mssql</alias>
                                     <run>
                                         <namingStrategy>alias</namingStrategy>
                                         <env>
                                             <ACCEPT_EULA>Y</ACCEPT_EULA>
                                             <SA_PASSWORD>wso2apim123#</SA_PASSWORD>
+                                            <MSSQL_DB>testamdb</MSSQL_DB>
                                         </env>
+                                        <ports>
+                                            <port>${apim-mssql.port}:1433</port>
+                                        </ports>
                                         <wait>
-                                            <tcp>
-                                                <ports>
-                                                    <port>1433</port>
-                                                </ports>
-                                            </tcp>
+                                            <log>MSSQL SERVER SUCCESSFULLY STARTED</log>
                                             <time>60000</time>
                                         </wait>
-                                    </run>
-                                </image>
-                                <image>
-                                    <name>dockerhub.private.wso2.com/tharindua-wso2-mssql-client</name>
-                                    <alias>apim-mssql-client</alias>
-                                    <run>
-                                        <namingStrategy>alias</namingStrategy>
-                                        <env>
-                                            <MSSQL_SERVER_HOST>apim-mssql</MSSQL_SERVER_HOST>
-                                            <MSSQL_USERNAME>SA</MSSQL_USERNAME>
-                                            <MSSQL_PASSWORD>wso2apim123#</MSSQL_PASSWORD>
-                                            <MSSQL_DATABASE_NAME>testamdb</MSSQL_DATABASE_NAME>
-                                        </env>
-                                        <links>
-                                            <link>apim-mssql:apim-mssql</link>
-                                        </links>
-                                        <dependsOn>
-                                            <dependsOn>apim-mssql</dependsOn>
-                                        </dependsOn>
                                     </run>
                                 </image>
                             </images>
@@ -563,7 +598,11 @@
                         <configuration>
                             <environmentVariables>
                                 <DATABASE_TYPE>mssql</DATABASE_TYPE>
+                                <PORT>${apim-mssql.port}</PORT>
                             </environmentVariables>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -587,13 +626,16 @@
                             </execution>
                             <execution>
                                 <id>verify-for-h2</id>
-                                <phase>integration-test</phase>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>verify</goal>
                                 </goals>
                             </execution>
                         </executions>
                         <configuration>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -606,7 +648,6 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.18.1</version>
                         <executions>
                             <execution>
                                 <id>start-docker-for-postgres</id>
@@ -636,6 +677,9 @@
                                             <POSTGRES_USER>root</POSTGRES_USER>
                                             <POSTGRES_DB>testamdb</POSTGRES_DB>
                                         </env>
+                                        <ports>
+                                            <port>${apim-postgres.port}:5432</port>
+                                        </ports>
                                         <wait>
                                             <tcp>
                                                 <ports>
@@ -672,7 +716,11 @@
                         <configuration>
                             <environmentVariables>
                                 <DATABASE_TYPE>postgres</DATABASE_TYPE>
+                                <PORT>${apim-postgres.port}</PORT>
                             </environmentVariables>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -685,17 +733,16 @@
                     <plugin>
                         <groupId>io.fabric8</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.18.1</version>
                         <executions>
                             <execution>
-                                <id>start-docker-for-postgres</id>
+                                <id>start-docker-for-oracle</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>start</goal>
                                 </goals>
                             </execution>
                             <execution>
-                                <id>stop-docker-for-postgres</id>
+                                <id>stop-docker-for-oracle</id>
                                 <phase>post-integration-test</phase>
                                 <goals>
                                     <goal>stop</goal>
@@ -707,12 +754,15 @@
                             <images>
                                 <image>
                                     <alias>apim-oracle</alias>
-                                    <name>dockerhub.private.wso2.com/tharindua-wso2-oracle-database:11.2.0.2-xe</name>
+                                    <name>tharindu1st/oracle-xe:11.2.0.2-xe</name>
                                     <run>
                                         <namingStrategy>alias</namingStrategy>
                                         <env>
                                             <DB_NAME>testamdb</DB_NAME>
                                         </env>
+                                        <ports>
+                                            <port>${apim-oracle.port}:1521</port>
+                                        </ports>
                                         <wait>
                                             <log>DATABASE IS READY TO USE!</log>
                                             <time>400000</time>
@@ -746,7 +796,45 @@
                         <configuration>
                             <environmentVariables>
                                 <DATABASE_TYPE>oracle</DATABASE_TYPE>
+                                <PORT>${apim-oracle.port}</PORT>
                             </environmentVariables>
+                            <argLine>-Duser.timezone=GMT</argLine>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testngDAO.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.19.1</version>
+                        <executions>
+                            <execution>
+                                <id>integration-for-generic-tests</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>verify-for-generic-tests</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                            </suiteXmlFiles>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -764,11 +852,14 @@
             org.osgi.util.tracker; version="${osgi.service.tracker.package.import.version.range}",
             org.wso2.carbon.datasource.core.*;version="${datasources.core.package.import.version.range}",
             com.zaxxer.hikari.*; version="${hikari.package.import.version.range}",
-            org.wso2.carbon.apimgt.lifecycle.manager.*,
+            org.wso2.carbon.kernel.*;version="${carbon.kernel.package.import.version.range}",
+            org.wso2.carbon.lcm.*,
+            org.wso2.carbon.lcm.sql.*,
             io.swagger.models.*,
             io.swagger.util.*,
             com.google.gson.*,
             com.google.common.*;
+            com.nimbusds.*;
             io.swagger.parser.*,
             org.json.simple.*,
             org.apache.commons.lang3.*,
@@ -777,12 +868,60 @@
             org.apache.velocity.*;
             org.wso2.andes.*;
             javax.jms.*;
+            javax.ws.rs.*;
             org.wso2.securevault.*;
+            org.apache.lucene.*;
+            org.ballerinalang.*,
+            org.ballerinalang.model.*,
+            org.ballerinalang.bre.*,
+            org.ballerinalang.natives.*,
+            org.ballerinalang.runtime.*,
+            org.ballerinalang.services.*,
+            org.ballerinalang.util.debugger.*,
+            org.ballerinalang.util.parser.*,
+            org.ballerinalang.util.exceptions.*,
+            org.ballerinalang.util.repository.*,
+            org.ballerinalang.util.program.*,
+            org.wso2.carbon.messaging.*,
+            org.ballerinalang.composer.service.workspace.*,
+            org.ballerinalang.composer.service.workspace.swagger.*,
+            org.ballerinalang.composer.service.workspace.rest.datamodel.*,
+            org.antlr.v4.runtime.*,
+            io.swagger.codegen.*,
+            org.apache.commons.cli.*,
+            com.samskivert.mustache.*,
+            org.codehaus.plexus.util.*,
+            org.ballerinalang.composer.service.workspace.swagger.generators.*,
+            com.fasterxml.jackson.core.*,
+            com.fasterxml.jackson.databind.*,
+
         </import.package>
         <export.package>
             !org.wso2.carbon.apimgt.core.internal,
-            org.wso2.carbon.apimgt.core.*; version="${carbon.apimgt.exp.pkg.version}"
+            org.wso2.carbon.apimgt.core.*; version="${carbon.apimgt.version}",
+            org.ballerinalang.model.*,
+            org.ballerinalang.bre.*,
+            org.ballerinalang.natives.*,
+            org.ballerinalang.runtime.*,
+            org.ballerinalang.services.*,
+            org.ballerinalang.util.debugger.*,
+            org.ballerinalang.util.parser.*,
+            org.ballerinalang.util.exceptions.*,
+            org.ballerinalang.util.repository.*,
+            org.ballerinalang.util.program.*,
+            org.wso2.carbon.messaging.*; version="2.2.3"
+            org.ballerinalang.composer.service.workspace.*,
+            org.ballerinalang.composer.service.workspace.swagger.*,
+            org.ballerinalang.composer.service.workspace.rest.datamodel.*,
+            org.antlr.v4.runtime.*,
+            io.swagger.codegen.*,
+            org.apache.commons.cli.*,
+            com.samskivert.mustache.*,
+            org.codehaus.plexus.util.*,
+            org.ballerinalang.composer.service.workspace.swagger.generators.*,
+            <!--com.fasterxml.jackson.core.*,-->
         </export.package>
+        <dynamic.import.package>*</dynamic.import.package>
     </properties>
 
 </project>

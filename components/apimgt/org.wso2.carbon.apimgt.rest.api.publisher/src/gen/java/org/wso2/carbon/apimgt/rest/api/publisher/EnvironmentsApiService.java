@@ -5,6 +5,7 @@ import org.wso2.carbon.apimgt.rest.api.publisher.dto.*;
 
 import org.wso2.msf4j.formparam.FormDataParam;
 import org.wso2.msf4j.formparam.FileInfo;
+import org.wso2.msf4j.Request;
 
 import org.wso2.carbon.apimgt.rest.api.publisher.dto.EnvironmentListDTO;
 import org.wso2.carbon.apimgt.rest.api.publisher.dto.ErrorDTO;
@@ -17,8 +18,11 @@ import java.io.InputStream;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-@javax.annotation.Generated(value = "class org.wso2.maven.plugins.JavaMSF4JServerCodegen", date = "2016-11-30T11:33:50.722+05:30")
+@javax.annotation.Generated(value = "org.wso2.maven.plugins.JavaMSF4JServerCodegen", date = "2017-04-06T17:02:03.158+05:30")
 public abstract class EnvironmentsApiService {
     public abstract Response environmentsGet(String apiId
- ) throws NotFoundException;
+ ,String accept
+ ,String ifNoneMatch
+ ,String ifModifiedSince
+ , Request request) throws NotFoundException;
 }

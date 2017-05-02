@@ -34,6 +34,7 @@ public class RestApiConstants {
     public static final String RESOURCE_TIER = "tier";
     public static final String RESOURCE_TIER_UPDATE_PERMISSION = RESOURCE_TIER + "/update-permission";
     public static final String RESOURCE_TAG = "tag";
+    public static final String RESOURCE_WORKFLOW = "workflow";
 
     public static final String STATUS_INTERNAL_SERVER_ERROR_MESSAGE_DEFAULT = "Internal server error";
     public static final String STATUS_INTERNAL_SERVER_ERROR_DESCRIPTION_DEFAULT =
@@ -69,25 +70,48 @@ public class RestApiConstants {
 
     public static final String REST_API_PROVIDER = "admin";
     public static final String REST_API_STORE_CONTEXT = "/api/am/store/";
-    public static final String REST_API_STORE_VERSION = "v0.10";
-    public static final String REST_API_PUBLISHER_VERSION = "v0.10";
+    public static final String REST_API_STORE_VERSION = "v1";
+    public static final String REST_API_PUBLISHER_VERSION = "v1";
     public static final String REST_API_PUBLISHER_CONTEXT = "/api/am/publisher/";
     public static final String REST_API_ADMIN_CONTEXT = "/api/am/admin";
-    public static final String REST_API_ADMIN_VERSION = "v0.10";
+    public static final String REST_API_ADMIN_VERSION = "v1";
 
     public static final String AUTHORIZATION_HTTP_HEADER = "Authorization";
     public static final String AUTH_TYPE_OAUTH2 = "OAuth2";
     public static final String BEARER_PREFIX = "bearer";
     public static final String AUTH_SERVER_URL_KEY = "AUTH_SERVER_URL";
-    public static final String AUTH_SERVER_URL = "https://localhost:9443/oauth2/introspect";
+    public static final String AUTH_SERVER_URL = "http://localhost:9090/keyserver/introspect";
     public static final String SCOPE = "scope";
-    public static final String PUBLISHER_API = "/publisher-api.yaml";
-    public static final String STORE_API = "/store-api.yaml";
+    public static final String PUBLISHER_API_YAML = "/publisher-api.yaml";
+    public static final String STORE_API_YAML = "/store-api.yaml";
+    public static final String ADMIN_API_YAML = "/admin-api.yaml";
     public static final String AUTH_TYPE_BASIC = "Basic";
     public static final String CHARSET_UTF_8 = "UTF-8";
 
     public static final int AUTH_TYPE_BASIC_LENGTH = AUTH_TYPE_BASIC.length();
+    public static final String GATEWAY_CONFIG_GET_URL =
+            REST_API_PUBLISHER_CONTEXT + REST_API_PUBLISHER_VERSION + RESOURCE_PATH_APIS;
+//    public static final String GATEWAY_CONFIG_GET_URL_HEADER = "Gateway-Config-Location";
+    public static final String SWAGGER_GET_URL =
+            REST_API_PUBLISHER_CONTEXT + REST_API_PUBLISHER_VERSION + RESOURCE_PATH_APIS;
+//    public static final String SWAGGER_GET_URL_HEADER = "Swagger-Config-Location";
 
+    public static final String COOKIE_HEADER = "Cookie";
+    
+    public static final String WEB_PROTOCOL_SUFFIX = "://";
+    public static final String SWAGGER_HOST_ELEMENT = "host";
+    public static final String RESOURCE_PATH_SUBSCRIPTION = "/subscriptions";
+    public static final String LOCATION_HEADER = "Location";
+
+    /**
+     * Type of UUF apps in system
+     */
+    public static class APPType {
+        public static final String PUBLISHER = "publisher";
+
+        public static final String STORE = "store";
+        public static final String ADMIN = "admin";
+    }
 }
 
 

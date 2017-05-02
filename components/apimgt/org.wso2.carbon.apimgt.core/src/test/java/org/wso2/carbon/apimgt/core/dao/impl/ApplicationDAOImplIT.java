@@ -24,14 +24,17 @@ import org.wso2.carbon.apimgt.core.SampleTestObjectCreator;
 import org.wso2.carbon.apimgt.core.TestUtil;
 import org.wso2.carbon.apimgt.core.dao.ApplicationDAO;
 import org.wso2.carbon.apimgt.core.models.Application;
+import org.wso2.carbon.apimgt.core.util.APIMgtConstants;
+import org.wso2.carbon.apimgt.core.util.ETagUtils;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 
 public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
 
     @Test
-    public void testAddAndGetApplication( ) throws Exception {
+    public void testAddAndGetApplication() throws Exception {
 
         //add new app
         Application app = TestUtil.addTestApplication();
@@ -45,7 +48,7 @@ public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
     }
 
     @Test
-    public void testUpdateApplication( ) throws Exception {
+    public void testUpdateApplication() throws Exception {
 
         //add new app
         Application currentApp = TestUtil.addTestApplication();
@@ -64,7 +67,7 @@ public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
     }
 
     @Test
-    public void testDeleteApplication( ) throws Exception {
+    public void testDeleteApplication() throws Exception {
 
         // add app
         Application app = TestUtil.addTestApplication();
@@ -76,7 +79,7 @@ public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
     }
 
     @Test
-    public void testIsApplicationNameExists( ) throws Exception {
+    public void testIsApplicationNameExists() throws Exception {
 
         ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
         //check for a non-existing application
@@ -88,7 +91,76 @@ public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
     }
 
     @Test
-    public void testGetAllApplications( ) throws Exception {
+    public void testGetApplicationByName() throws Exception {
+
+        // add app
+        Application app = TestUtil.addTestApplication();
+        ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
+        //get app by name
+        Application appFromDB = applicationDAO.getApplicationByName(app.getName(), app.getCreatedUser());
+        Assert.assertNotNull(appFromDB);
+        //compare
+        Assert.assertEquals(appFromDB, app, TestUtil.printDiff(appFromDB, app));
+        validateAppTimestamps(appFromDB, app);
+    }
+
+    @Test
+    public void testAddApplicationWithPermissions() throws Exception {
+
+        //add new app with permissions
+        Application app = TestUtil.addTestApplicationWithPermissions();
+        ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
+        //get added app
+        Application appFromDB = applicationDAO.getApplication(app.getId());
+        Assert.assertNotNull(appFromDB);
+        //compare
+        Assert.assertEquals(appFromDB, app, TestUtil.printDiff(appFromDB, app));
+        validateAppTimestamps(appFromDB, app);
+    }
+
+    @Test
+    public void testUpdateApplicationWithPermissions() throws Exception {
+
+        //add new app
+        Application currentApp = TestUtil.addTestApplication();
+        ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
+        //create new app with permissions
+        HashMap permissionMap = new HashMap();
+        permissionMap.put(APIMgtConstants.Permission.UPDATE, APIMgtConstants.Permission.UPDATE_PERMISSION);
+        Application newApp = SampleTestObjectCreator.createAlternativeApplication();
+        newApp.setId(currentApp.getId());
+        newApp.setCreatedTime(currentApp.getCreatedTime());
+        newApp.setPermissionMap(permissionMap);
+        //update app
+        applicationDAO.updateApplication(currentApp.getId(), newApp);
+        //get app
+        Application appFromDB = applicationDAO.getApplication(newApp.getId());
+        Assert.assertNotNull(appFromDB);
+        //compare
+        Assert.assertEquals(appFromDB, newApp, TestUtil.printDiff(appFromDB, newApp));
+        validateAppTimestamps(appFromDB, newApp);
+    }
+
+    @Test
+    public void testUpdateApplicationState() throws Exception {
+
+        //add new app
+        Application app = TestUtil.addTestApplication();
+        ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
+        //update app
+        applicationDAO.updateApplicationState(app.getId(), APIMgtConstants.ApplicationStatus.APPLICATION_APPROVED);
+        //get app
+        Application appFromDB = applicationDAO.getApplication(app.getId());
+        Assert.assertNotNull(appFromDB);
+        //check whether the status has updated
+        Assert.assertEquals(appFromDB.getStatus(), APIMgtConstants.ApplicationStatus.APPLICATION_APPROVED);
+        //compare
+        Assert.assertNotEquals(appFromDB, app, TestUtil.printDiff(appFromDB, app));
+        validateAppTimestamps(appFromDB, app);
+    }
+
+    @Test
+    public void testGetAllApplications() throws Exception {
 
         //add 4 apps
         String username = "admin";
@@ -122,25 +194,49 @@ public class ApplicationDAOImplIT extends DAOIntegrationTestBase {
     }
 
     @Test
-    public void testGetApplicationsForUser( ) throws Exception {
+    public void testFingerprintAfterUpdatingApplication() throws Exception {
+        ApplicationDAO applicationDAO = DAOFactory.getApplicationDAO();
+
+        //add new app
+        Application currentApp = TestUtil.addTestApplication();
+        String fingerprintBeforeUpdate = ETagUtils
+                .generateETag(applicationDAO.getLastUpdatedTimeOfApplication(currentApp.getId()));
+        Assert.assertNotNull(fingerprintBeforeUpdate);
+        Thread.sleep(1);
+
+        Application newApp = SampleTestObjectCreator.createAlternativeApplication();
+        newApp.setId(currentApp.getId());
+        newApp.setCreatedTime(currentApp.getCreatedTime());
+        //update app
+        applicationDAO.updateApplication(currentApp.getId(), newApp);
+        String fingerprintAfterUpdate = ETagUtils
+                .generateETag(applicationDAO.getLastUpdatedTimeOfApplication(currentApp.getId()));
+        Assert.assertNotNull(fingerprintAfterUpdate);
+
+        //compare
+        Assert.assertNotEquals(fingerprintBeforeUpdate, fingerprintAfterUpdate);
+    }
+
+    @Test
+    public void testGetApplicationsForUser() throws Exception {
 
 
     }
 
     @Test
-    public void testGetApplicationsForGroup( ) throws Exception {
+    public void testGetApplicationsForGroup() throws Exception {
 
 
     }
 
     @Test
-    public void testSearchApplicationsForUser( ) throws Exception {
+    public void testSearchApplicationsForUser() throws Exception {
 
 
     }
 
     @Test
-    public void testSearchApplicationsForGroup( ) throws Exception {
+    public void testSearchApplicationsForGroup() throws Exception {
 
     }
 

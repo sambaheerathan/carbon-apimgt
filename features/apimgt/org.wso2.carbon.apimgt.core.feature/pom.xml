@@ -17,13 +17,11 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.wso2.carbon.apimgt</groupId>
         <artifactId>apimgt-feature</artifactId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.0.4-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -35,6 +33,12 @@
         <dependency>
             <groupId>org.wso2.carbon.apimgt</groupId>
             <artifactId>org.wso2.carbon.apimgt.core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.h2database.wso2</groupId>
+                    <artifactId>h2-database-engine</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
@@ -59,20 +63,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database.wso2</groupId>
-            <artifactId>h2-database-engine</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.osgi</groupId>
-                    <artifactId>org.eclipse.osgi</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.googlecode.json-simple.wso2</groupId>
@@ -122,6 +112,20 @@
             <groupId>org.wso2.securevault</groupId>
             <artifactId>org.wso2.securevault</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.lucene</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -144,6 +148,7 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+
                     <execution>
                         <id>clean-apim-h2-database</id>
                         <phase>initialize</phase>
@@ -152,7 +157,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <delete file="resources/database/AM_DB.h2.db" />
+                                <delete file="resources/database/AM_DB.mv.db" />
                                 <delete file="resources/database/AM_DB.trace.db" />
                             </target>
                         </configuration>
@@ -170,6 +175,7 @@
                                 </path>
                                 <echo message="########### Creating Carbon APIM Database ##############" />
                                 <sql driver="org.h2.Driver" url="jdbc:h2:${basedir}/resources/database/AM_DB;create=true" userid="wso2carbon" password="wso2carbon" autocommit="true" onerror="continue">
+
                                     <classpath>
                                         <path refid="h2.classpath" />
                                     </classpath>
@@ -196,7 +202,7 @@
                                 <artifactItem>
                                     <groupId>org.wso2.carbon.apimgt</groupId>
                                     <artifactId>org.wso2.carbon.apimgt.core</artifactId>
-                                    <version>7.0.0-SNAPSHOT</version>
+                                    <version>${project.version}</version>
                                     <type>bundle</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
@@ -224,6 +230,8 @@
                                     <includes>
                                         <include>dbscripts/**</include>
                                         <include>database/**</include>
+                                        <include>template/**</include>
+					<include>conf/**</include>
                                         <include>p2.inf</include>
                                     </includes>
                                 </resource>
@@ -277,6 +285,10 @@
                                     <version>${com.fasterxml.jackson.core.version}</version>
                                 </bundle>
                                 <bundle>
+                                    <symbolicName>nimbus-jose-jwt</symbolicName>
+                                    <version>2.26.1.wso2v2</version>
+                                </bundle>
+                                <bundle>
                                     <symbolicName>com.fasterxml.jackson.jaxrs.jackson-jaxrs-base</symbolicName>
                                     <version>${com.fasterxml.jackson.core.version}</version>
                                 </bundle>
@@ -328,18 +340,21 @@
                                     <symbolicName>org.wso2.securevault</symbolicName>
                                     <version>${securevault.version}</version>
                                 </bundle>
+                                <bundle>
+                                    <symbolicName>org.apache.servicemix.bundles.lucene</symbolicName>
+                                    <version>${lucene.bundle.version}</version>
+                                </bundle>
                             </bundles>
-                            <importFeatures>
-                                <feature>
-                                    <id>org.wso2.carbon.apimgt.lifecycle.manager.feature</id>
-                                    <version>${carbon.apimgt.version}</version>
-                                </feature>
-                            </importFeatures>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
+        <!--<resources>-->
+            <!--<resource>-->
+                <!--<directory>${project.build.directory}/docs/</directory>-->
+            <!--</resource>-->
+        <!--</resources>-->
     </build>
 
 </project>

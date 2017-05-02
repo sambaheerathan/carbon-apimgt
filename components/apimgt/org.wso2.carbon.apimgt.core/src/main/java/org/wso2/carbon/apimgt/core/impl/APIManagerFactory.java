@@ -26,6 +26,7 @@ import org.wso2.carbon.apimgt.core.api.APIGatewayPublisher;
 import org.wso2.carbon.apimgt.core.api.APIMgtAdminService;
 import org.wso2.carbon.apimgt.core.api.APIPublisher;
 import org.wso2.carbon.apimgt.core.api.APIStore;
+import org.wso2.carbon.apimgt.core.api.GatewaySourceGenerator;
 import org.wso2.carbon.apimgt.core.dao.impl.DAOFactory;
 import org.wso2.carbon.apimgt.core.exception.APIManagementException;
 import org.wso2.carbon.apimgt.core.exception.APIMgtDAOException;
@@ -36,7 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 
+ *
  * Creates API Producers and API Consumers.
  *
  */
@@ -85,8 +86,17 @@ public class APIManagerFactory {
 
     private APIPublisher newProvider(String username) throws APIManagementException {
         try {
-            return new UserAwareAPIPublisher(username, DAOFactory.getApiDAO(), DAOFactory.getApplicationDAO(),
-                    DAOFactory.getAPISubscriptionDAO(), DAOFactory.getPolicyDAO());
+            UserAwareAPIPublisher userAwareAPIPublisher = new UserAwareAPIPublisher(username, DAOFactory.getApiDAO(),
+                    DAOFactory.getApplicationDAO(), DAOFactory.getAPISubscriptionDAO(), DAOFactory.getPolicyDAO(),
+                    DAOFactory.getLabelDAO(), DAOFactory.getWorkflowDAO(), instance.getGatewaySourceGenerator(),
+                    getGateway());
+
+            // Register all the observers which need to observe 'Publisher' component
+            userAwareAPIPublisher.registerObserver(new EventLogger());
+            userAwareAPIPublisher.registerObserver(new FunctionTrigger(DAOFactory.getFunctionDAO(),
+                    new RestCallUtilImpl()));
+
+            return userAwareAPIPublisher;
         } catch (APIMgtDAOException e) {
             log.error("Couldn't Create API Provider", e);
             throw new APIMgtDAOException("Couldn't Create API Provider", ExceptionCodes.APIMGT_DAO_EXCEPTION);
@@ -96,7 +106,8 @@ public class APIManagerFactory {
 
     private APIMgtAdminServiceImpl newAPIMgtAdminService() throws APIManagementException {
         try {
-            return new APIMgtAdminServiceImpl(DAOFactory.getAPISubscriptionDAO());
+            return new APIMgtAdminServiceImpl(DAOFactory.getAPISubscriptionDAO(), DAOFactory.getPolicyDAO(),
+                    DAOFactory.getApiDAO(), DAOFactory.getLabelDAO());
         } catch (APIMgtDAOException e) {
             log.error("Couldn't create API Management Admin Service", e);
             throw new APIMgtDAOException("Couldn't create API Management Admin Service",
@@ -110,9 +121,17 @@ public class APIManagerFactory {
         // username = null;
         // }
         try {
-            return new UserAwareAPIStore(username, DAOFactory.getApiDAO(), DAOFactory.getApplicationDAO(),
-                    DAOFactory.getAPISubscriptionDAO(), DAOFactory.getPolicyDAO(), DAOFactory.getTagDAO());
+            UserAwareAPIStore userAwareAPIStore = new UserAwareAPIStore(username, DAOFactory.getApiDAO(),
+                    DAOFactory.getApplicationDAO(), DAOFactory.getAPISubscriptionDAO(),
+                    DAOFactory.getPolicyDAO(), DAOFactory.getTagDAO(), DAOFactory.getLabelDAO(),
+                    DAOFactory.getWorkflowDAO());
 
+            // Register all the observers which need to observe 'Store' component
+            userAwareAPIStore.registerObserver(new EventLogger());
+            userAwareAPIStore.registerObserver(new FunctionTrigger(DAOFactory.getFunctionDAO(),
+                    new RestCallUtilImpl()));
+
+            return userAwareAPIStore;
         } catch (APIMgtDAOException e) {
             log.error("Couldn't Create API Consumer", e);
             throw new APIMgtDAOException("Couldn't Create API Consumer", ExceptionCodes.APIMGT_DAO_EXCEPTION);
@@ -166,5 +185,9 @@ public class APIManagerFactory {
 
     public APIGatewayPublisher getGateway() {
         return new APIGatewayPublisherImpl();
+    }
+
+    public GatewaySourceGenerator getGatewaySourceGenerator() {
+        return new GatewaySourceGeneratorImpl();
     }
 }

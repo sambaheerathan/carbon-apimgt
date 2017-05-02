@@ -21,24 +21,32 @@ package org.wso2.carbon.apimgt.core.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.carbon.apimgt.core.exception.APIManagementException;
+import org.wso2.carbon.apimgt.core.exception.ExceptionCodes;
 import org.wso2.carbon.apimgt.core.models.API;
 import org.wso2.carbon.apimgt.core.models.Scope;
+import org.wso2.carbon.apimgt.core.models.UriTemplate;
 import org.wso2.carbon.apimgt.core.models.policy.Policy;
+import org.wso2.carbon.lcm.core.impl.LifecycleState;
 
 import java.time.Duration;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * Class for all utility methods
  */
 public class APIUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(APIUtils.class);
 
     /**
      * Checks if debug log is enabled and logs the message
@@ -92,26 +100,11 @@ public class APIUtils {
         if (StringUtils.isEmpty(api.getId())) {
             throw new APIManagementException("Couldn't find UUID of API");
         }
-        if (StringUtils.isEmpty(api.getApiDefinition())) {
-            throw new APIManagementException("Couldn't find swagger definition of API");
-        }
         if (StringUtils.isEmpty(api.getName())) {
             throw new APIManagementException("Couldn't find Name of API ");
         }
-        if (StringUtils.isEmpty(api.getContext())) {
-            throw new APIManagementException("Couldn't find Context of API ");
-        }
         if (StringUtils.isEmpty(api.getVersion())) {
             throw new APIManagementException("Couldn't find Version of API ");
-        }
-        if (api.getTransport().isEmpty()) {
-            throw new APIManagementException("Couldn't find Transport of API ");
-        }
-        if (api.getPolicies().isEmpty()) {
-            throw new APIManagementException("Couldn't find Policies of API ");
-        }
-        if (api.getVisibility() == null) {
-            throw new APIManagementException("Couldn't find Visibility of API ");
         }
     }
 
@@ -166,6 +159,135 @@ public class APIUtils {
             return true;
         } else {
             return Duration.between(date1, date2).toMillis() < 1000L;
+        }
+    }
+
+    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "DM_CONVERT_CASE", justification = "Didn't need to do " +
+            "as String already did internally")
+
+
+/**
+ * used to generate operationId according to the uri template and http verb
+ */
+    public static String generateOperationIdFromPath(String path, String httpVerb) {
+        //TODO need to write proper way of creating operationId
+        StringTokenizer stringTokenizer = new StringTokenizer(path, "/");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(httpVerb.toLowerCase());
+        while (stringTokenizer.hasMoreElements()) {
+            String part1 = stringTokenizer.nextToken();
+            if (part1.contains("{")) {
+/*
+                stringBuilder.append("By" + pathParam);
+*/
+            } else if (part1.contains("*")) {
+                stringBuilder.append(part1.replaceAll("\\*", "_star_"));
+            } else {
+                stringBuilder.append(part1);
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    public static Map<String, UriTemplate> getMergedUriTemplates(Map<String, UriTemplate> oldUriTemplateMap,
+                                                                 Map<String, UriTemplate> updatedUriTemplateMap) {
+        Map<String, UriTemplate> uriTemplateMap = new HashMap<>();
+        for (UriTemplate uriTemplate : updatedUriTemplateMap.values()) {
+            if (oldUriTemplateMap.containsKey(uriTemplate.getTemplateId())) {
+                uriTemplateMap.put(uriTemplate.getTemplateId(), oldUriTemplateMap.get(uriTemplate.getTemplateId()));
+            } else {
+                uriTemplateMap.put(uriTemplate.getTemplateId(), uriTemplate);
+            }
+        }
+        return uriTemplateMap;
+    }
+
+    /**
+     * Validate lifecycle state transition is valid from one state to other
+     * @param lifecycleState Lifecycle state object
+     * @param nextState target lifecycle state
+     * @return true if target state is valid
+     */
+    public static boolean validateTargetState(LifecycleState lifecycleState, String nextState) {
+        return lifecycleState.getAvailableTransitionBeanList().stream().anyMatch(availableTransitionBean ->
+                availableTransitionBean.getTargetState().equals(nextState));
+    }
+
+    /**
+     * This method returns all available roles
+     *
+     * @return all available roles
+     */
+    public static List<String> getAllAvailableRoles() {
+
+        //this should be a call to IS endpoint and get all the roles, we are returning a dummy list till then
+        List<String> availableRoleList = new ArrayList<>();
+        availableRoleList.add("admin");
+        availableRoleList.add("subscriber");
+        availableRoleList.add("manager");
+        availableRoleList.add("developer");
+        availableRoleList.add("lead");
+        return availableRoleList;
+    }
+
+    /**
+     * Used to get roles of a particular user
+     *
+     * @param username username of the person
+     * @return role list of the user
+     */
+    public static List<String> getAllRolesOfUser(String username) {
+
+        //this should be a call to IS endpoint and get roles of the user, we are returning a dummy list till then
+        List<String> userRoles = new ArrayList<>();
+        if ("admin".equalsIgnoreCase(username)) {
+            userRoles.add("admin");
+            userRoles.add(APIMgtConstants.Permission.EVERYONE_GROUP);
+        } else if ("subscriber".equalsIgnoreCase(username)) {
+            userRoles.add("subscriber");
+        } else if ("John".equalsIgnoreCase(username)) {
+            userRoles.add("manager");
+            userRoles.add("developer");
+        } else if ("Smith".equalsIgnoreCase(username)) {
+            userRoles.add("lead");
+        } else if ("Alex".equalsIgnoreCase(username)) {
+            userRoles.add("admin");
+            userRoles.add("manager");
+        }
+        return userRoles;
+    }
+
+    /**
+     * Check the validity of roles to be assigned to an API
+     *
+     * @param availableRoleList all available roles
+     * @param candidateRoleList candidate roles to be assigned to the API
+     * @return true if all candidate roles are eligible
+     * @throws APIManagementException if the check fails
+     */
+    public static boolean checkAllowedRoles(List<String> availableRoleList, List<String> candidateRoleList)
+            throws APIManagementException {
+
+        //check if availableRoleList and candidateRoleList is not null
+        if (availableRoleList != null && candidateRoleList != null) {
+            if (availableRoleList.isEmpty() || candidateRoleList.isEmpty()) {
+                String errorMsg = "Role list is empty.";
+                log.error(errorMsg);
+                throw new APIManagementException(errorMsg, ExceptionCodes.ROLES_CANNOT_BE_EMPTY);
+            } else {
+                //check if all roles in candidateRoleList are in availableRoleList
+                if (availableRoleList.containsAll(candidateRoleList)) {
+                    return true;
+                } else {
+                    String errorMsg = "Invalid role(s) found.";
+                    log.error(errorMsg);
+                    throw new APIManagementException(errorMsg, ExceptionCodes.UNSUPPORTED_ROLE);
+                }
+            }
+        } else {
+            String errorMsg = "Role(s) list is null.";
+            log.error(errorMsg);
+            throw new APIManagementException(errorMsg, ExceptionCodes.ROLES_CANNOT_BE_NULL);
         }
     }
 }

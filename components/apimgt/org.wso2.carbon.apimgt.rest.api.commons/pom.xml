@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <parent>
         <artifactId>apimgt</artifactId>
         <groupId>org.wso2.carbon.apimgt</groupId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.0.4-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>org.wso2.carbon.apimgt.rest.api.commons</artifactId>
     <name>WSO2 Carbon - API Manager Rest API Commons</name>
     <packaging>bundle</packaging>
+
     <build>
         <plugins>
             <plugin>
@@ -38,6 +39,12 @@
                                     <directory>../org.wso2.carbon.apimgt.rest.api.store/src/main/resources</directory>
                                     <includes>
                                         <include>store-api.yaml</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>../org.wso2.carbon.apimgt.rest.api.admin/src/main/resources</directory>
+                                    <includes>
+                                        <include>admin-api.yaml</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -75,6 +82,18 @@
             <artifactId>org.wso2.carbon.security.caas</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.orbit.io.swagger</groupId>
+            <artifactId>swagger-parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.transport</groupId>
+            <artifactId>org.wso2.carbon.transport.http.netty</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon.messaging</groupId>
             <artifactId>org.wso2.carbon.messaging</artifactId>
             <scope>provided</scope>
@@ -106,13 +125,17 @@
             org.apache.commons.lang3.*; version="${apache.commons.lang3.import.version.range}",
             org.wso2.carbon.security.caas.*; version="${org.wso2.carbon.security.caas.import.version.range}",
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",
+            org.wso2.carbon.transport.http.netty.config.*;version="${carbon.transport.package.import.version.range}",
             org.yaml.snakeyaml.*;version="${snakeyaml.version.range}",
             org.json.simple.*,
             org.apache.commons.io.*;
             com.google.gson.*,
+            io.swagger.parser.*,
+            io.swagger.models.*,
+            io.swagger.util.*,
         </import.package>
         <export.package>
-            org.wso2.carbon.apimgt.rest.api.common.*; version="${carbon.apimgt.exp.pkg.version}",
+            org.wso2.carbon.apimgt.rest.api.common.*; version="${carbon.apimgt.version}",
         </export.package>
         <carbon.component>
             osgi.service;objectClass="org.wso2.msf4j.Interceptor" ; serviceCount="1"

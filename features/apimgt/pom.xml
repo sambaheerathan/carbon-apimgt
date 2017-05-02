@@ -19,13 +19,11 @@
   ~ *
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>org.wso2.carbon.apimgt.parent</artifactId>
+        <artifactId>carbon-apimgt</artifactId>
         <groupId>org.wso2.carbon.apimgt</groupId>
-        <version>7.0.0-SNAPSHOT</version>
+        <version>7.0.4-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -37,6 +35,8 @@
         <module>org.wso2.carbon.apimgt.rest.api.commons.feature</module>
         <module>org.wso2.carbon.apimgt.rest.api.publisher.feature</module>
         <module>org.wso2.carbon.apimgt.rest.api.store.feature</module>
+        <module>org.wso2.carbon.apimgt.rest.api.admin.feature</module>
+        <module>org.wso2.carbon.apimgt.rest.api.core.feature</module>
         <module>org.wso2.carbon.apimgt.indexing.feature</module>
         <module>org.wso2.carbon.apimgt.gateway.extension.feature</module>
     </modules>

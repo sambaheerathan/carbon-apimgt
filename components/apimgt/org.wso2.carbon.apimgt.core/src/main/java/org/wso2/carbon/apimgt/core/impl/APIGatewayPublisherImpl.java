@@ -18,18 +18,24 @@
 */
 package org.wso2.carbon.apimgt.core.impl;
 
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.andes.client.AMQConnectionFactory;
 import org.wso2.andes.url.URLSyntaxException;
 import org.wso2.carbon.apimgt.core.APIMConfigurations;
 import org.wso2.carbon.apimgt.core.api.APIGatewayPublisher;
-import org.wso2.carbon.apimgt.core.dao.ApiDAO;
-import org.wso2.carbon.apimgt.core.dao.impl.DAOFactory;
-import org.wso2.carbon.apimgt.core.exception.APIMgtDAOException;
+import org.wso2.carbon.apimgt.core.exception.ExceptionCodes;
+import org.wso2.carbon.apimgt.core.exception.GatewayException;
 import org.wso2.carbon.apimgt.core.internal.ServiceReferenceHolder;
 import org.wso2.carbon.apimgt.core.models.API;
-
+import org.wso2.carbon.apimgt.core.template.dto.GatewayConfigDTO;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -44,6 +50,8 @@ import javax.jms.TopicSession;
 public class APIGatewayPublisherImpl implements APIGatewayPublisher {
     private static final Logger log = LoggerFactory.getLogger(APIGatewayPublisherImpl.class);
     private APIMConfigurations config;
+    private String gatewayFileExtension = ".bal";
+    private String endpointConfigName = "endpoint";
 
     public APIGatewayPublisherImpl() {
         config = ServiceReferenceHolder.getInstance().getAPIMConfiguration();
@@ -56,30 +64,64 @@ public class APIGatewayPublisherImpl implements APIGatewayPublisher {
      * @return is publishing success
      */
     @Override
-    public boolean publishToGateway(API api) {
+    public boolean publishToGateway(API api) throws GatewayException {
         try {
-            ApiDAO apiDAO = DAOFactory.getApiDAO();
-            String gatewayConfig = apiDAO.getGatewayConfig(api.getId());
-            publishMessage(gatewayConfig);
+            String gatewayConfig = api.getGatewayConfig();
+            String gwHome = System.getProperty("gwHome");
+            //TODO: remove temp fix to ignore gateway home
+            if (gwHome == null) {
+                gwHome = System.getProperty("carbon.home");
+            }
+            String defaultConfig = null;
+            if (api.isDefaultVersion()) {
+                //change the context name without version
+                String newContext = "@http:BasePath(\"/" + api.getContext() + "\")";
+                defaultConfig = gatewayConfig.replaceAll("@http:BasePath\\(\"(.)*\"\\)", newContext);
+                //set the service name with api name only
+                String newServiceName = "service " + api.getName() + " {";
+                defaultConfig = defaultConfig
+                        .replaceAll("service( )*" + api.getName() + "_[0-9]*( )*\\{", newServiceName);
+            }
+            if (gwHome == null) {
+                // create the message to send
+                GatewayConfigDTO dto = new GatewayConfigDTO();
+                dto.setType("api");
+                dto.setApiName(api.getName());
+                dto.setContext(api.getContext());
+                dto.setVersion(api.getVersion());
+                dto.setCreator(api.getCreatedBy());
+                dto.setConfig(gatewayConfig);
+                publishMessage(dto); //publishing versioned API
+                if (api.isDefaultVersion()) {
+                    //publishing default API
+                    publishMessage(dto);
+                }
+            } else {
+                saveApi(api, gwHome, gatewayConfig, false);
+                if (api.isDefaultVersion()) {
+                    saveApi(api, gwHome, defaultConfig, true);
+                }
+            }
             return true;
         } catch (JMSException e) {
-            log.error("Error generating API configuration for API " + api.getName(), e);
+            log.error("Error deploying API configuration for API " + api.getName(), e);
+            throw new GatewayException("Error deploying API configuration for API " + api.getName(),
+                    ExceptionCodes.GATEWAY_EXCEPTION);
         } catch (URLSyntaxException e) {
-            log.error("Error generating API configuration for API " + api.getName(), e);
-        } catch (APIMgtDAOException e) {
-            log.error("Error getting API configuration for API " + api.getName(), e);
+            log.error("Error deploying API configuration for API " + api.getName(), e);
+            throw new GatewayException("Error generating API configuration for API " + api.getName(),
+                    ExceptionCodes.GATEWAY_EXCEPTION);
         }
-        return false;
     }
 
     /**
      * Publishing the API config to gateway
      *
-     * @param content API configuration
+     * @param dto GatewayConfigDTO to be published
      * @throws JMSException       if JMS issue is occurred
      * @throws URLSyntaxException If connection String is invalid
      */
-    private void publishMessage(String content) throws JMSException, URLSyntaxException {
+    private void publishMessage(GatewayConfigDTO dto) throws JMSException, URLSyntaxException {
         // create connection factory
         TopicConnectionFactory connFactory = new AMQConnectionFactory(
                 getTCPConnectionURL(config.getUsername(), config.getPassword()));
@@ -88,8 +130,8 @@ public class APIGatewayPublisherImpl implements APIGatewayPublisher {
         TopicSession topicSession = topicConnection.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
         // Send message
         Topic topic = topicSession.createTopic(config.getTopicName());
-        // create the message to send
-        TextMessage textMessage = topicSession.createTextMessage(content);
+
+        TextMessage textMessage = topicSession.createTextMessage(new Gson().toJson(dto));
         TopicPublisher topicPublisher = topicSession.createPublisher(topic);
         topicPublisher.publish(textMessage);
 
@@ -114,5 +156,128 @@ public class APIGatewayPublisherImpl implements APIGatewayPublisher {
                 .append(config.getTopicServerHost()).append(":")
                 .append(config.getTopicServerPort()).append("'").toString();
 
+    }
+
+    /**
+     * Save API into FS
+     *
+     * @param api     API object
+     * @param gwHome  path of the gateway
+     * @param content API config
+     */
+    private void saveApi(API api, String gwHome, String content, boolean isDefaultApi) {
+        String deploymentDirPath = gwHome + File.separator + config.getGatewayPackageNamePath();
+        File deploymentDir = new File(deploymentDirPath);
+        if (!deploymentDir.exists()) {
+            log.info("Creating deployment dir in: " + deploymentDirPath);
+            boolean created = deploymentDir.mkdirs();
+            if (!created) {
+                log.error("Error creating directory: " + deploymentDirPath);
+            }
+        }
+
+        String path;
+        if (isDefaultApi) {
+            path = deploymentDirPath + File.separator + api.getName() + gatewayFileExtension;
+        } else {
+            path = deploymentDirPath + File.separator + api.getName() + '_' + api.getVersion() + gatewayFileExtension;
+        }
+        Writer writer = null;
+        PrintWriter printWriter = null;
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(path), "UTF-8");
+            printWriter = new PrintWriter(writer);
+            printWriter.println(content);
+        } catch (IOException e) {
+            log.error("Error saving API configuration in " + path, e);
+        } finally {
+            try {
+                if (printWriter != null) {
+                    printWriter.close();
+                }
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                log.error("Error closing connections", e);
+            }
+        }
+    }
+
+    /**
+     * Publishing Endpoint configuration artifacts to the gateway
+     *
+     * @param config endpoint config
+     * @return is publishing success
+     */
+    @Override
+    public boolean publishEndpointConfigToGateway(String config) throws GatewayException {
+        try {
+            String gwHome = System.getProperty("gwHome");
+
+            //TODO: remove temp fix to ignore gateway home
+            if (gwHome == null) {
+                gwHome = System.getProperty("carbon.home");
+            }
+
+            if (gwHome == null) {
+                GatewayConfigDTO dto = new GatewayConfigDTO();
+                dto.setType("endpoint");
+                dto.setApiName(endpointConfigName);
+                dto.setConfig(config);
+                publishMessage(dto); //TODO publish endpoint configs correctly
+            } else {
+                saveEndpointConfig(gwHome, config);
+            }
+            return true;
+        } catch (JMSException e) {
+            log.error("Error deploying configuration for " + endpointConfigName, e);
+            throw new GatewayException("Template " + "resources" + File.separator + "template.xml not Found",
+                    ExceptionCodes.GATEWAY_EXCEPTION);
+        } catch (URLSyntaxException e) {
+            log.error("Error deploying configuration for " + endpointConfigName, e);
+            throw new GatewayException("Error deploying configuration for " + endpointConfigName,
+                    ExceptionCodes.GATEWAY_EXCEPTION);
+        }
+    }
+
+    /**
+     * Save config into FS
+     *
+     * @param gwHome  path of the gateway
+     * @param content endpoint config
+     */
+    private void saveEndpointConfig(String gwHome, String content) {
+        String deploymentDirPath = gwHome + File.separator + config.getGatewayPackageNamePath();
+        File deploymentDir = new File(deploymentDirPath);
+        if (!deploymentDir.exists()) {
+            log.info("Creating deployment dir in: " + deploymentDirPath);
+            boolean created = deploymentDir.mkdirs();
+            if (!created) {
+                log.error("Error creating directory: " + deploymentDirPath);
+            }
+        }
+
+        String path = deploymentDirPath + File.separator + endpointConfigName + gatewayFileExtension;
+        Writer writer = null;
+        PrintWriter printWriter = null;
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(path), "UTF-8");
+            printWriter = new PrintWriter(writer);
+            printWriter.println(content);
+        } catch (IOException e) {
+            log.error("Error saving endpoint configuration in " + path, e);
+        } finally {
+            try {
+                if (printWriter != null) {
+                    printWriter.close();
+                }
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                log.error("Error closing connections", e);
+            }
+        }
     }
 }

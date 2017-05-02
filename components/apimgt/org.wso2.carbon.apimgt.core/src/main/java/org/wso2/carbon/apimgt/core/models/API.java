@@ -22,14 +22,15 @@ package org.wso2.carbon.apimgt.core.models;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.wso2.carbon.apimgt.core.util.APIUtils;
-import org.wso2.carbon.apimgt.core.util.URITemplateComparator;
-import org.wso2.carbon.apimgt.lifecycle.manager.core.ManagedLifecycle;
-import org.wso2.carbon.apimgt.lifecycle.manager.core.exception.LifecycleException;
-import org.wso2.carbon.apimgt.lifecycle.manager.core.impl.LifecycleState;
+import org.wso2.carbon.lcm.core.ManagedLifecycle;
+import org.wso2.carbon.lcm.core.exception.LifecycleException;
+import org.wso2.carbon.lcm.core.impl.LifecycleState;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -48,22 +49,14 @@ public final class API {
         description = builder.description;
         lifeCycleStatus = builder.lifeCycleStatus;
         lifecycleInstanceId = builder.lifecycleInstanceId;
-        if (builder.apiDefinition != null) {
-            apiDefinition = builder.apiDefinition.toString();
-        } else {
-            apiDefinition = "";
-        }
-        if (builder.gatewayConfig != null) {
-            gatewayConfig = builder.gatewayConfig.toString();
-        } else {
-            gatewayConfig = "";
-        }
+        endpoint = builder.endpoint;
         wsdlUri = builder.wsdlUri;
         isResponseCachingEnabled = builder.isResponseCachingEnabled;
         cacheTimeout = builder.cacheTimeout;
         isDefaultVersion = builder.isDefaultVersion;
         transport = builder.transport;
         tags = builder.tags;
+        labels = builder.labels;
         policies = builder.policies;
         visibility = builder.visibility;
         visibleRoles = builder.visibleRoles;
@@ -71,12 +64,25 @@ public final class API {
         corsConfiguration = builder.corsConfiguration;
         createdTime = builder.createdTime;
         createdBy = builder.createdBy;
+        updatedBy = builder.updatedBy;
         lastUpdatedTime = builder.lastUpdatedTime;
         lifecycleState = builder.lifecycleState;
         uriTemplates = builder.uriTemplates;
         copiedFromApiId = builder.copiedFromApiId;
+        gatewayConfig = builder.gatewayConfig;
+        apiDefinition = builder.apiDefinition;
+        if (builder.apiPermission != null) {
+            apiPermission = builder.apiPermission.toString();
+        } else {
+            apiPermission = "";
+        }
+        permissionMap = builder.permissionMap;
+        workflowStatus = builder.workflowStatus;
     }
 
+    public HashMap getPermissionMap() {
+        return permissionMap;
+    }
     public String getId() {
         return id;
     }
@@ -109,8 +115,8 @@ public final class API {
         return lifecycleInstanceId;
     }
 
-    public String getApiDefinition() {
-        return apiDefinition;
+    public Map<String, String> getEndpoint() {
+        return endpoint;
     }
 
     public String getGatewayConfig() {
@@ -141,6 +147,10 @@ public final class API {
         return tags;
     }
 
+    public List<String> getLabels() {
+        return labels;
+    }
+
     public List<String> getPolicies() {
         return policies;
     }
@@ -169,6 +179,10 @@ public final class API {
         return createdBy;
     }
 
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
     public LocalDateTime getLastUpdatedTime() {
         return lastUpdatedTime;
     }
@@ -177,8 +191,12 @@ public final class API {
         return lifecycleState;
     }
 
-    public List<UriTemplate> getUriTemplates() {
+    public Map<String, UriTemplate> getUriTemplates() {
         return uriTemplates;
+    }
+
+    public String getApiPermission() {
+        return apiPermission;
     }
 
     @Override
@@ -203,11 +221,12 @@ public final class API {
                 Objects.equals(description, api.description) &&
                 Objects.equals(lifeCycleStatus, api.lifeCycleStatus) &&
                 Objects.equals(lifecycleInstanceId, api.lifecycleInstanceId) &&
-                Objects.equals(apiDefinition, api.apiDefinition) &&
+                Objects.equals(endpoint, api.endpoint) &&
                 Objects.equals(gatewayConfig, api.gatewayConfig) &&
                 Objects.equals(wsdlUri, api.wsdlUri) &&
                 APIUtils.isListsEqualIgnoreOrder(transport, api.transport) &&
                 APIUtils.isListsEqualIgnoreOrder(tags, api.tags) &&
+                APIUtils.isListsEqualIgnoreOrder(labels, api.labels) &&
                 APIUtils.isListsEqualIgnoreOrder(policies, api.policies) &&
                 visibility == api.visibility &&
                 APIUtils.isListsEqualIgnoreOrder(visibleRoles, api.visibleRoles) &&
@@ -215,18 +234,21 @@ public final class API {
                 Objects.equals(corsConfiguration, api.corsConfiguration) &&
                 APIUtils.isTimeStampsEquals(createdTime, api.createdTime) &&
                 Objects.equals(createdBy, api.createdBy) &&
+                Objects.equals(updatedBy, api.updatedBy) &&
                 APIUtils.isTimeStampsEquals(lastUpdatedTime, api.lastUpdatedTime) &&
                 Objects.equals(lifecycleState, api.lifecycleState) &&
-                APIUtils.isListsEqualIgnoreOrder(uriTemplates, api.uriTemplates, new URITemplateComparator()) &&
-                Objects.equals(copiedFromApiId, api.copiedFromApiId);
+                Objects.equals(uriTemplates, api.uriTemplates) &&
+                Objects.equals(copiedFromApiId, api.copiedFromApiId) &&
+                Objects.equals(endpoint, api.endpoint);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, provider, name, version, context, description, lifeCycleStatus, lifecycleInstanceId,
-                apiDefinition, gatewayConfig, wsdlUri, isResponseCachingEnabled, cacheTimeout, isDefaultVersion,
-                transport, tags, policies, visibility, visibleRoles, businessInformation, corsConfiguration,
-                createdTime, createdBy, lastUpdatedTime, lifecycleState, uriTemplates, copiedFromApiId);
+                endpoint, gatewayConfig, wsdlUri, isResponseCachingEnabled, cacheTimeout, isDefaultVersion,
+                transport, tags, labels, policies, visibility, visibleRoles, businessInformation, corsConfiguration,
+                createdTime, createdBy, updatedBy, lastUpdatedTime, lifecycleState, uriTemplates, copiedFromApiId,
+                workflowStatus);
     }
 
 
@@ -245,7 +267,7 @@ public final class API {
     private final String description;
     private final String lifeCycleStatus;
     private final String lifecycleInstanceId;
-    private final String apiDefinition;
+    private final Map<String, String> endpoint;
     private final String gatewayConfig;
     private final String wsdlUri;
     private final boolean isResponseCachingEnabled;
@@ -253,6 +275,7 @@ public final class API {
     private final boolean isDefaultVersion;
     private final List<String> transport;
     private final List<String> tags;
+    private final List<String> labels;
     private final List<String> policies;
     private final Visibility visibility;
     private final List<String> visibleRoles;
@@ -260,10 +283,19 @@ public final class API {
     private final CorsConfiguration corsConfiguration;
     private final LocalDateTime createdTime;
     private final String createdBy;
+    private final String updatedBy;
     private final LocalDateTime lastUpdatedTime;
     private final LifecycleState lifecycleState;
-    private final List<UriTemplate> uriTemplates;
+    private final Map<String, UriTemplate> uriTemplates;
     private String copiedFromApiId;
+    private final String apiDefinition;
+    private final HashMap permissionMap;
+    private final String apiPermission;
+    private final String workflowStatus; 
+    
+    public String getWorkflowStatus() {
+        return workflowStatus;
+    }
 
     /**
      * {@code API} builder static inner class.
@@ -273,6 +305,7 @@ public final class API {
         private String id;
         private String provider;
         private String name;
+        private String permission;
 
         public String getId() {
             return id;
@@ -302,12 +335,16 @@ public final class API {
             return lifecycleInstanceId;
         }
 
-        public StringBuilder getApiDefinition() {
-            return apiDefinition;
+        public Map<String, String> getEndpoint() {
+            return endpoint;
         }
 
-        public StringBuilder getGatewayConfig() {
+        public String getGatewayConfig() {
             return gatewayConfig;
+        }
+
+        public StringBuilder getApiPermission() {
+            return apiPermission;
         }
 
         public String getWsdlUri() {
@@ -338,6 +375,10 @@ public final class API {
             return tags;
         }
 
+        public List<String> getLabels() {
+            return labels;
+        }
+
         public List<String> getPolicies() {
             return policies;
         }
@@ -359,8 +400,10 @@ public final class API {
         private String description;
         private String lifeCycleStatus;
         private String lifecycleInstanceId;
-        private StringBuilder apiDefinition;
-        private StringBuilder gatewayConfig;
+        private HashMap permissionMap;
+        private StringBuilder apiPermission;
+        private Map<String, String> endpoint = Collections.EMPTY_MAP;
+        private String gatewayConfig;
         private String wsdlUri = "";
         private boolean isResponseCachingEnabled;
         private int cacheTimeout;
@@ -368,18 +411,22 @@ public final class API {
         private String apiPolicy;
         private List<String> transport = Collections.emptyList();
         private List<String> tags = Collections.emptyList();
-        private List<String> policies;
-        private Visibility visibility;
+        private List<String> labels = Collections.emptyList();
+        private List<String> policies = Collections.EMPTY_LIST;
+        private Visibility visibility = Visibility.PUBLIC;
         private List<String> visibleRoles = Collections.emptyList();
         private BusinessInformation businessInformation;
         private CorsConfiguration corsConfiguration;
         private LocalDateTime createdTime;
         private String createdBy;
+        private String updatedBy;
         private LocalDateTime lastUpdatedTime;
         private LifecycleState lifecycleState;
-        private List<UriTemplate> uriTemplates = Collections.emptyList();
+        private Map<String, UriTemplate> uriTemplates = Collections.EMPTY_MAP;
         private String copiedFromApiId;
-
+        private String apiDefinition;
+        private String workflowStatus;
+        
         public APIBuilder(String provider, String name, String version) {
             this.provider = provider;
             this.name = name;
@@ -395,17 +442,14 @@ public final class API {
             this.description = copy.description;
             this.lifeCycleStatus = copy.lifeCycleStatus;
             this.lifecycleInstanceId = copy.lifecycleInstanceId;
-            if (copy.apiDefinition != null) {
-                this.apiDefinition = new StringBuilder(copy.apiDefinition);
-            } else {
-                this.apiDefinition = new StringBuilder();
-            }
+            this.endpoint = copy.endpoint;
             this.wsdlUri = copy.wsdlUri;
             this.isResponseCachingEnabled = copy.isResponseCachingEnabled;
             this.cacheTimeout = copy.cacheTimeout;
             this.isDefaultVersion = copy.isDefaultVersion;
             this.transport = copy.transport;
             this.tags = copy.tags;
+            this.labels = copy.labels;
             this.policies = copy.policies;
             this.visibility = copy.visibility;
             this.visibleRoles = copy.visibleRoles;
@@ -417,6 +461,14 @@ public final class API {
             this.lifecycleState = copy.lifecycleState;
             this.uriTemplates = copy.uriTemplates;
             this.copiedFromApiId = copy.copiedFromApiId;
+            this.apiDefinition = copy.apiDefinition;
+            if (copy.apiPermission != null) {
+                this.apiPermission = new StringBuilder(copy.apiPermission);
+            } else {
+                this.apiPermission = new StringBuilder();
+            }
+            this.permissionMap = new HashMap<>();
+            this.workflowStatus = copy.workflowStatus;
         }
 
         /**
@@ -516,7 +568,7 @@ public final class API {
         /**
          * Sets the lifecycleState and return a reference to this APIBuilder
          *
-         * @param lifecycleState
+         * @param lifecycleState    Lifecycle state object.
          * @return a reference to APIBuilder
          */
         public APIBuilder lifecycleState(LifecycleState lifecycleState) {
@@ -525,14 +577,19 @@ public final class API {
         }
 
         /**
-         * Sets the {@code apiDefinition} and returns a reference to this APIBuilder so that the methods can be chained
+         * Sets the {@code endpoint} and returns a reference to this APIBuilder so that the methods can be chained
          * together.
          *
-         * @param apiDefinition the {@code apiDefinition} to set
+         * @param endpoint the {@code endpoint} to set
          * @return a reference to this APIBuilder
          */
-        public APIBuilder apiDefinition(StringBuilder apiDefinition) {
-            this.apiDefinition = apiDefinition;
+        public APIBuilder endpoint(Map<String, String> endpoint) {
+            this.endpoint = endpoint;
+            return this;
+        }
+
+        public APIBuilder apiPermission(StringBuilder apiPermission) {
+            this.apiPermission = apiPermission;
             return this;
         }
 
@@ -543,7 +600,7 @@ public final class API {
          * @param gatewayConfig the {@code gatewayConfig} to set
          * @return a reference to this APIBuilder
          */
-        public APIBuilder gatewayConfig(StringBuilder gatewayConfig) {
+        public APIBuilder gatewayConfig(String gatewayConfig) {
             this.gatewayConfig = gatewayConfig;
             return this;
         }
@@ -632,6 +689,18 @@ public final class API {
         }
 
         /**
+         * Sets the {@code labels} and returns a reference to this APIBuilder so that the methods can be chained
+         * together.
+         *
+         * @param labels the {@code labels} to set
+         * @return a reference to this APIBuilder
+         */
+        public APIBuilder labels(List<String> labels) {
+            this.labels = labels;
+            return this;
+        }
+
+        /**
          * Sets the {@code policies} and returns a reference to this APIBuilder so that the methods can be chained
          * together.
          *
@@ -643,6 +712,12 @@ public final class API {
             return this;
         }
 
+        public APIBuilder permission(String permission) {
+            this.permission = permission;
+            return this;
+        }
+
+
         /**
          * Sets the {@code policies} and returns a reference to this APIBuilder so that the methods can be chained
          * together.
@@ -650,8 +725,13 @@ public final class API {
          * @param uriTemplates the {@code uriTemplates} to set
          * @return a reference to this APIBuilder
          */
-        public APIBuilder uriTemplates(List<UriTemplate> uriTemplates) {
+        public APIBuilder uriTemplates(Map<String, UriTemplate> uriTemplates) {
             this.uriTemplates = uriTemplates;
+            return this;
+        }
+
+        public APIBuilder permissionMap(HashMap map) {
+            this.permissionMap = map;
             return this;
         }
 
@@ -728,6 +808,18 @@ public final class API {
         }
 
         /**
+         * Sets the {@code updatedBy} and returns a reference to this APIBuilder so that the methods can be chained
+         * together.
+         *
+         * @param updatedBy the {@code updatedBy} to set
+         * @return a reference to this APIBuilder
+         */
+        public APIBuilder updatedBy(String updatedBy) {
+            this.updatedBy = updatedBy;
+            return this;
+        }
+
+        /**
          * Sets the {@code lastUpdatedTime} and returns a reference to this APIBuilder so that the methods can be
          * chained together.
          *
@@ -747,10 +839,33 @@ public final class API {
          * @return a reference to this APIBuilder
          */
         public APIBuilder copiedFromApiId(String copiedFromApiId) {
-                   this.copiedFromApiId = copiedFromApiId;
-                   return this;
+            this.copiedFromApiId = copiedFromApiId;
+            return this;
         }
 
+        /**
+         * Sets the {@code copiedFromApiId} and returns a reference to this APIBuilder so that the methods can be
+         * chained together.
+         *
+         * @param apiDefinition the {@code apiDefinition} to set
+         * @return a reference to this APIBuilder
+         */
+        public APIBuilder apiDefinition(String apiDefinition) {
+            this.apiDefinition = apiDefinition;
+            return this;
+        }
+
+        /**
+         * Sets the {@code workflowStatus} and returns a reference to this APIBuilder so that the methods can be
+         * chained together.
+         *
+         * @param workflowStatus the {@code workflowStatus} to set
+         * @return a reference to this APIBuilder
+         */
+        public APIBuilder workflowStatus(String workflowStatus) {
+            this.workflowStatus = workflowStatus;
+            return this;
+        }
 
         /**
          * Returns a {@code API} built from the parameters previously set.
@@ -821,13 +936,45 @@ public final class API {
             return lastUpdatedTime;
         }
 
-        public List<UriTemplate> getUriTemplates() {
+        public Map<String, UriTemplate> getUriTemplates() {
             return uriTemplates;
         }
 
         public String getCopiedFromApiId() {
             return copiedFromApiId;
         }
+
+        public void setCopiedFromApiId(String copiedFromApiId) {
+            this.copiedFromApiId = copiedFromApiId;
+        }
+
+        public String getApiDefinition() {
+            return apiDefinition;
+        }
+
+        public void setPermissionMap(HashMap permissionMap) {
+            this.permissionMap =  permissionMap;
+        }
+
+        public Map getPermissionMap() {
+            return permissionMap;
+        }
+
+        public String getPermission() {
+            return permission;
+        }
+
+        public void setPermission(String permission) {
+            this.permission = permission;
+        }
+
+        public String getWorkflowStatus() {
+            return workflowStatus;
+        }
+    }
+
+    public String getApiDefinition() {
+        return apiDefinition;
     }
 
     public String getCopiedFromApiId() {

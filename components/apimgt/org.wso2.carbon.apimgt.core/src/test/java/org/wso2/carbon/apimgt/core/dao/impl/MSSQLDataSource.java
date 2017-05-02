@@ -34,9 +34,10 @@ public class MSSQLDataSource implements DataSource {
     static String databaseName = "testamdb";
 
     MSSQLDataSource() throws Exception {
-        String ipAddress = TestUtil.getInstance().getIpAddressOfContainer("apim-mssql");
+        String ipAddress = TestUtil.getInstance().getIpAddressOfContainer();
         basicDataSource.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        basicDataSource.setJdbcUrl("jdbc:sqlserver://"+ipAddress+":1433;databaseName=testamdb");
+        basicDataSource.setJdbcUrl("jdbc:sqlserver://" + ipAddress + ":" + System.getenv("PORT") + ";" +
+                "databaseName=testamdb");
         basicDataSource.setUsername("SA");
         basicDataSource.setPassword("wso2apim123#");
         basicDataSource.setAutoCommit(true);
@@ -76,12 +77,27 @@ public class MSSQLDataSource implements DataSource {
                 }
             }
             for (String table : tables) {
-                try(ResultSet resultSet = statement.executeQuery("SELECT name as ForeignKey_Name,OBJECT_SCHEMA_NAME" +
+                // drop full text indexes
+                try (ResultSet resultSet = statement.executeQuery("SELECT object_id, property_list_id, stoplist_id " +
+                        "FROM sys.fulltext_indexes where object_id = object_id('" + table + "')")) {
+                    if (resultSet.next()) {
+                        statement.addBatch("DROP FULLTEXT INDEX ON " + table);
+                    }
+                }
+                // drop full text catalogues
+                try (ResultSet resultSet = statement.executeQuery("SELECT fts.name as name FROM sys.fulltext_indexes " +
+                        "as fis, sys.fulltext_catalogs as fts where object_id = object_id('" + table + "') and fis" +
+                        ".fulltext_catalog_id=fts.fulltext_catalog_id")) {
+                    while (resultSet.next()) {
+                        statement.addBatch("DROP FULLTEXT CATALOG " + resultSet.getString("name"));
+                    }
+                }
+                try (ResultSet resultSet = statement.executeQuery("SELECT name as ForeignKey_Name,OBJECT_SCHEMA_NAME" +
                         "(parent_object_id) as Schema_Name,OBJECT_NAME(parent_object_id) as Table_Name FROM sys" +
                         ".foreign_keys " +
-                        "WHERE referenced_object_id = object_id('" + table + "')")){
+                        "WHERE referenced_object_id = object_id('" + table + "')")) {
                     while (resultSet.next()) {
-                        try(Statement statement1= connection.createStatement()){
+                        try (Statement statement1 = connection.createStatement()) {
                             statement1.execute("ALTER TABLE " + resultSet.getString("Schema_Name") + "." +
                                     resultSet.getString("Table_Name") + " DROP CONSTRAINT " +
                                     resultSet.getString("ForeignKey_Name"));

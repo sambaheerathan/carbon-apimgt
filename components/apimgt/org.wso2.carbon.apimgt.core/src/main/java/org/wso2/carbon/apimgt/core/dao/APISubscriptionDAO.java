@@ -41,7 +41,7 @@ public interface APISubscriptionDAO {
      *
      * @param subscriptionId The UUID that uniquely identifies a Subscription
      * @return valid {@link Subscription} object or null
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscription.
      */
     @CheckForNull
     Subscription getAPISubscription(String subscriptionId) throws APIMgtDAOException;
@@ -51,15 +51,17 @@ public interface APISubscriptionDAO {
      *
      * @param apiId The UUID of API
      * @return List of {@link Subscription} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     public List<Subscription> getAPISubscriptionsByAPI(String apiId) throws APIMgtDAOException;
 
     /**
      * Retrieve the list of subscriptions of an API for validation
      *
+     * @param apiContext Context of the API.
+     * @param apiVersion Version of the API.
      * @return A list of {@link SubscriptionValidationData} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscription validation data.
      */
     @CheckForNull
     List<SubscriptionValidationData> getAPISubscriptionsOfAPIForValidation(String apiContext, String apiVersion)
@@ -70,18 +72,19 @@ public interface APISubscriptionDAO {
      *
      * @param applicationId The UUID of Application
      * @return List of {@link Subscription} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscription data.
      */
     public List<Subscription> getAPISubscriptionsByApplication(String applicationId) throws APIMgtDAOException;
 
     /**
      * Retrieve all API Subscriptions for validation
      *
+     * @param limit Subscription Limit
      * @return A list of {@link SubscriptionValidationData} objects
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     @CheckForNull
-    List<SubscriptionValidationData> getAPISubscriptionsOfAPIForValidation() throws APIMgtDAOException;
+    List<SubscriptionValidationData> getAPISubscriptionsOfAPIForValidation(int limit) throws APIMgtDAOException;
 
     /**
      * Retrieves all available API Subscriptions. This method supports result pagination and ensuring results
@@ -89,11 +92,11 @@ public interface APISubscriptionDAO {
      *
      * @param offset   The number of results from the beginning that is to be ignored
      * @param limit    The maximum number of results to be returned after the offset
-     * @param userName The username to filter results by
+     * @param username The username to filter results by
      * @return {@link APISubscriptionResults} matching results
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
-    APISubscriptionResults getAPISubscriptionsForUser(int offset, int limit, String userName) throws APIMgtDAOException;
+    List<Subscription> getAPISubscriptionsForUser(int offset, int limit, String username) throws APIMgtDAOException;
 
     /**
      * Retrieves all available API Subscriptions. This method supports result pagination and
@@ -103,7 +106,7 @@ public interface APISubscriptionDAO {
      * @param limit   The maximum number of results to be returned after the offset
      * @param groupID The Group ID to filter results by
      * @return {@link APISubscriptionResults} matching results
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     APISubscriptionResults getAPISubscriptionsForGroup(int offset, int limit, String groupID) throws APIMgtDAOException;
 
@@ -115,12 +118,12 @@ public interface APISubscriptionDAO {
      * @param searchString    The search string provided
      * @param offset          The number of results from the beginning that is to be ignored
      * @param limit           The maximum number of results to be returned after the offset
-     * @param userName        The username to filter results by
+     * @param username        The username to filter results by
      * @return {@link APISubscriptionResults} matching results
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     APISubscriptionResults searchApplicationsForUser(String searchAttribute, String searchString, int offset,
-                                                     int limit, String userName) throws APIMgtDAOException;
+                                                     int limit, String username) throws APIMgtDAOException;
 
     /**
      * Retrieves all available API Subscriptions that match the given search criteria. This method supports
@@ -132,7 +135,7 @@ public interface APISubscriptionDAO {
      * @param limit           The maximum number of results to be returned after the offset
      * @param groupID         The Group ID to filter results by
      * @return {@link APISubscriptionResults} matching results
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     APISubscriptionResults searchApplicationsForGroup(String searchAttribute, String searchString, int offset,
                                                       int limit, String groupID) throws APIMgtDAOException;
@@ -144,8 +147,8 @@ public interface APISubscriptionDAO {
      * @param apiId  API ID
      * @param appId  Application ID
      * @param tier   subscription tier
-     * @param status {@link APIConstants.SubscriptionStatus} Subscription state
-     * @throws APIMgtDAOException
+     * @param status {@code APIConstants.SubscriptionStatus} Subscription state
+     * @throws APIMgtDAOException   If failed to add subscription.
      */
     void addAPISubscription(String uuid, String apiId, String appId, String tier, APIMgtConstants.SubscriptionStatus
             status) throws APIMgtDAOException;
@@ -154,7 +157,7 @@ public interface APISubscriptionDAO {
      * Remove an existing API Subscription
      *
      * @param subscriptionId The UUID of the API Subscription that needs to be deleted
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to delete subscription.
      */
     void deleteAPISubscription(String subscriptionId) throws APIMgtDAOException;
 
@@ -164,14 +167,14 @@ public interface APISubscriptionDAO {
      *
      * @param apiId UUID of the API
      * @return  Subscription Count
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to get subscriptions.
      */
     long getSubscriptionCountByAPI(String apiId) throws APIMgtDAOException;
 
     /**
      * Copy existing subscriptions on one of the API versions into latest version
-     * @param subscriptionList {@link List<Subscription>}
-     * @throws APIMgtDAOException
+     * @param subscriptionList {@code List<Subscription>}
+     * @throws APIMgtDAOException   If filed to copy subscriptions.
      */
     void copySubscriptions(List<Subscription> subscriptionList) throws APIMgtDAOException;
 
@@ -180,7 +183,7 @@ public interface APISubscriptionDAO {
      *
      * @param subId     ID of the Subscription
      * @param subStatus New Subscription Status
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed update subscription status.
      */
     void updateSubscriptionStatus(String subId, APIMgtConstants.SubscriptionStatus subStatus) throws
             APIMgtDAOException;
@@ -190,7 +193,7 @@ public interface APISubscriptionDAO {
      *
      * @param subId  ID of the Subscription
      * @param policy New Subscription Policy
-     * @throws APIMgtDAOException
+     * @throws APIMgtDAOException   If failed to update subscription policy.
      */
     void updateSubscriptionPolicy(String subId, String policy) throws APIMgtDAOException;
 
@@ -201,8 +204,26 @@ public interface APISubscriptionDAO {
      * @param apiVersion Version of the API
      * @param consumerKey Consumer key of the application
      * @return Subscription Validation Information
-     * @throws APIManagementException
+     * @throws APIMgtDAOException   If failed to validat subscription.
      */
     SubscriptionValidationResult validateSubscription(String apiContext, String apiVersion, String consumerKey)
             throws APIMgtDAOException;
+
+    /**
+     * Retrieves the last updated time of the subscription
+     *
+     * @param subscriptionId UUID of the subscription
+     * @return  Last updated time of the resource
+     * @throws APIMgtDAOException if DB level exception occurred
+     */
+    String getLastUpdatedTimeOfSubscription(String subscriptionId) throws APIMgtDAOException;
+
+    /**
+     * Retrieve the list of subscriptions of an Application which are in pending state
+     *
+     * @param applicationId The UUID of Application
+     * @return A list of {@link Subscription} objects which has pending status
+     * @throws APIMgtDAOException   If failed to get subscriptions.
+     */
+    List<Subscription> getPendingAPISubscriptionsByApplication(String applicationId) throws APIMgtDAOException;
 }

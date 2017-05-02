@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * FileInfoDTO
  */
-@javax.annotation.Generated(value = "class org.wso2.maven.plugins.JavaMSF4JServerCodegen", date = "2016-11-30T11:33:50.722+05:30")
+@javax.annotation.Generated(value = "org.wso2.maven.plugins.JavaMSF4JServerCodegen", date = "2017-04-06T17:02:03.158+05:30")
 public class FileInfoDTO   {
   @JsonProperty("relativePath")
   private String relativePath = null;

@@ -21,8 +21,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 /**
@@ -37,11 +37,13 @@ public class ErrorDTO {
 
     private String description = null;
 
-    private  HashMap<String, String>   paramList = null;
+    private  Map<String, String>   paramList = null;
 
     private List<ErrorListItemDTO> error = new ArrayList<ErrorListItemDTO>();
 
     /**
+     * Method to get the error code
+     * @return  error code.
      **/
     @ApiModelProperty(required = true, value = "") @JsonProperty("code") public Long getCode() {
         return code;
@@ -52,7 +54,8 @@ public class ErrorDTO {
     }
 
     /**
-     * Error message.
+     * Method th get the error message.
+     * @return error message.
      */
     @ApiModelProperty(required = true, value = "Error message.") @JsonProperty("message")
     public String getMessage() {
@@ -65,6 +68,7 @@ public class ErrorDTO {
 
     /**
      * A detail description about the error message.
+     * @return error description.
      */
     @ApiModelProperty(value = "A detail description about the error message.") @JsonProperty("description")
     public String getDescription() {
@@ -77,18 +81,20 @@ public class ErrorDTO {
 
     /**
      * Preferably an url with more details about the error.
+     * @return  map of parameters specific to the error.
      */
     @ApiModelProperty(value = "Preferably an url with more details about the error.") @JsonProperty("moreInfo")
-    public HashMap<String, String> getMoreInfo() {
+    public Map<String, String> getMoreInfo() {
         return paramList;
     }
 
-    public void setMoreInfo(HashMap<String, String> moreInfo) {
+    public void setMoreInfo(Map<String, String> moreInfo) {
         this.paramList = moreInfo;
     }
 
     /**
      * If there are more than one error list them out. Ex. list out validation errors by each field.
+     * @return {@code List<ErrorListItemDTO>}   List of error objects.
      */
     @ApiModelProperty(value = "If there are more than one error list them out. Ex. list out validation errors "
             + "by each field.")

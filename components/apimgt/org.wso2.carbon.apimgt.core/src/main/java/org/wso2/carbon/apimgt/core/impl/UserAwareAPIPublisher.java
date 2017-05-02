@@ -17,10 +17,14 @@
  */
 package org.wso2.carbon.apimgt.core.impl;
 
+import org.wso2.carbon.apimgt.core.api.APIGatewayPublisher;
+import org.wso2.carbon.apimgt.core.api.GatewaySourceGenerator;
 import org.wso2.carbon.apimgt.core.dao.APISubscriptionDAO;
 import org.wso2.carbon.apimgt.core.dao.ApiDAO;
 import org.wso2.carbon.apimgt.core.dao.ApplicationDAO;
+import org.wso2.carbon.apimgt.core.dao.LabelDAO;
 import org.wso2.carbon.apimgt.core.dao.PolicyDAO;
+import org.wso2.carbon.apimgt.core.dao.WorkflowDAO;
 
 /**
  * This class used to check the permissions for users
@@ -28,7 +32,10 @@ import org.wso2.carbon.apimgt.core.dao.PolicyDAO;
  class UserAwareAPIPublisher extends APIPublisherImpl {
 
     public UserAwareAPIPublisher(String username, ApiDAO apiDAO, ApplicationDAO applicationDAO,
-             APISubscriptionDAO apiSubscriptionDAO , PolicyDAO policyDAO) {
-        super(username, apiDAO, applicationDAO, apiSubscriptionDAO, policyDAO, new APILifeCycleManagerImpl());
+                                 APISubscriptionDAO apiSubscriptionDAO, PolicyDAO policyDAO, LabelDAO labelDAO,
+                                 WorkflowDAO workflowDAO, GatewaySourceGenerator gatewaySourceGenerator,
+                                 APIGatewayPublisher apiGatewayPublisher) {
+        super(username, apiDAO, applicationDAO, apiSubscriptionDAO, policyDAO, new APILifeCycleManagerImpl(), labelDAO,
+                workflowDAO, gatewaySourceGenerator, apiGatewayPublisher);
     }
 }
